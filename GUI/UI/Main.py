@@ -1,15 +1,7 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'mainwindow.ui'
-#
-# Created by: PyQt5 UI code generator 5.8.1
-#
-# WARNING! All changes made in this file will be lost!
-
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QPen, QColor, QPainter, QColor, QBrush
-from PyQt5.QtWidgets import QWidget,QVBoxLayout, QHBoxLayout
-from PyQt5.QtCore import QRect
+from PyQt5 import QtCore, QtWidgets
+from PyQt5.QtWidgets import QWidget
+from GUI.Data import ReadFile
+import time
 
 class Ui_MainWindow(object):
 
@@ -75,8 +67,6 @@ class Ui_MainWindow(object):
         self.label.setObjectName("label")
         self.leftLayoutPositioner.addWidget(self.label, 0, 0, 1, 1)
 
-
-
     def rightLayout(self):
         self.rightLayout = QtWidgets.QGridLayout()
         self.rightLayout.setContentsMargins(11, 11, 11, 11)
@@ -126,10 +116,16 @@ class Ui_MainWindow(object):
         v = 0
         layout = self.rightLayoutPositioner
         indexSensors = 192
-        listV = []
+        self.listV = []
+        self.listS = []
         for t in range(indexSensors):
             sensor = "sensor" + str(t)
-            listV.append(sensor)
+            dataSensorName = "dataSensor" + str(t)
+            dataSensorName = []
+
+            self.listV.append(sensor)
+            self.listS.append(dataSensorName)
+
 
         i = 24
         j = 8
@@ -137,31 +133,31 @@ class Ui_MainWindow(object):
             if g == 0 or g == 23:
                 for t in range(j):
                     if t == 0 or t == 7:
-                        listV[v] = QWidget()
-                        test = listV[v]
+                        self.listV[v] = QWidget()
+                        test = self.listV[v]
                         v += 1
                         test.setMinimumHeight(20)
                         test.setMinimumWidth(20)
-                        test.setMaximumHeight(40)
-                        test.setMaximumWidth(40)
+                        test.setMaximumHeight(60)
+                        test.setMaximumWidth(60)
                         layout.addWidget(test, t, g)
 
 
                     else:
-                        listV[v] = QWidget()
-                        test = listV[v]
+                        self.listV[v] = QWidget()
+                        test = self.listV[v]
                         v += 1
                         test.setMinimumHeight(20)
                         test.setMinimumWidth(20)
-                        test.setMaximumHeight(40)
-                        test.setMaximumWidth(40)
+                        test.setMaximumHeight(60)
+                        test.setMaximumWidth(60)
                         test.setAutoFillBackground(True)
                         test.setStyleSheet("background-color: red")
                         layout.addWidget(test, t, g)
             else:
                 for t in range(j):
-                    listV[v] = QWidget()
-                    test = listV[v]
+                    self.listV[v] = QWidget()
+                    test = self.listV[v]
                     v += 1
                     test.setMinimumHeight(20)
                     test.setMinimumWidth(20)
@@ -171,10 +167,20 @@ class Ui_MainWindow(object):
                     test.setStyleSheet("background-color: green")
                     layout.addWidget(test, t, g)
 
-
-
-
-
+        start_time = time.time()
+        object1 = ReadFile.ReadFile()
+        limit = 0
+        for rows in object1.ws.rows:
+            c = 0
+            if limit <= 1000:
+                for cell in rows:
+                    dataSensorName = self.listS[c]
+                    dataSensorName.append(cell.value)
+                    c += 1
+            else:
+                break;
+            limit += 1
+        print("--- %s seconds ---" % (time.time() - start_time))
 
 
 if __name__ == "__main__":
