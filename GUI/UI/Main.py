@@ -115,20 +115,16 @@ class Ui_MainWindow(object):
     # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # visualisation setup
     def setupMappingVisualisation(self):
-        v = 0
         layout = self.rightLayoutPositioner
-        indexSensors = 192
-        self.listV = []
         self.dictionary = {}
-
         i = 24
         j = 8
         for g in range(i):
             if g == 0 or g == 23:
                 for t in range(j):
                     if t == 0 or t == 7:
-                        self.d["dataSensor{0}".format(g)] = QWidget()
-
+                        self.dictionary["widget{0}".format(g)] = QWidget()
+                        test = self.dictionary.get("widget{0}".format(g))
                         test.setMinimumHeight(20)
                         test.setMinimumWidth(20)
                         test.setMaximumHeight(60)
@@ -137,9 +133,8 @@ class Ui_MainWindow(object):
 
 
                     else:
-                        self.listV[v] = QWidget()
-                        test = self.listV[v]
-                        v += 1
+                        self.dictionary["widget{0}".format(g)] = QWidget()
+                        test = self.dictionary.get("widget{0}".format(g))
                         test.setMinimumHeight(20)
                         test.setMinimumWidth(20)
                         test.setMaximumHeight(60)
@@ -149,9 +144,8 @@ class Ui_MainWindow(object):
                         layout.addWidget(test, t, g)
             else:
                 for t in range(j):
-                    self.listV[v] = QWidget()
-                    test = self.listV[v]
-                    v += 1
+                    self.dictionary["widget{0}".format(g)] = QWidget()
+                    test = self.dictionary.get("widget{0}".format(g))
                     test.setMinimumHeight(20)
                     test.setMinimumWidth(20)
                     test.setMaximumHeight(60)
@@ -178,8 +172,8 @@ class Ui_MainWindow(object):
     #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # updater
     def update(self):
-        test = self.d["dataSensor1"]
-        print(test)
+        test = self.dictionary["widget1"]
+        test.setStyleSheet("background-color: black")
 
 
 
