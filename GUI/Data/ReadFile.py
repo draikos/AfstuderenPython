@@ -11,3 +11,4 @@ class ReadFile(object):
     def ReadFile(self):
         self.wb = load_workbook(filename="test.xlsx", read_only=True)
         self.ws = self.wb["Blad1"]
+        print("not important")

@@ -2,6 +2,7 @@ from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtWidgets import QWidget
 from GUI.Data import ReadFile
 import time
+from collections import defaultdict
 
 class Ui_MainWindow(object):
 
@@ -18,6 +19,7 @@ class Ui_MainWindow(object):
         self.rightLayout()
         self.mainLayout()
         self.menubar()
+        self.update()
         MainWindow.setCentralWidget(self.centralWidget)
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -117,15 +119,7 @@ class Ui_MainWindow(object):
         layout = self.rightLayoutPositioner
         indexSensors = 192
         self.listV = []
-        self.listS = []
-        for t in range(indexSensors):
-            sensor = "sensor" + str(t)
-            dataSensorName = "dataSensor" + str(t)
-            dataSensorName = []
-
-            self.listV.append(sensor)
-            self.listS.append(dataSensorName)
-
+        self.dictionary = {}
 
         i = 24
         j = 8
@@ -133,9 +127,8 @@ class Ui_MainWindow(object):
             if g == 0 or g == 23:
                 for t in range(j):
                     if t == 0 or t == 7:
-                        self.listV[v] = QWidget()
-                        test = self.listV[v]
-                        v += 1
+                        self.d["dataSensor{0}".format(g)] = QWidget()
+
                         test.setMinimumHeight(20)
                         test.setMinimumWidth(20)
                         test.setMaximumHeight(60)
@@ -170,17 +163,25 @@ class Ui_MainWindow(object):
         start_time = time.time()
         object1 = ReadFile.ReadFile()
         limit = 0
+        self.d = defaultdict(list)
         for rows in object1.ws.rows:
-            c = 0
-            if limit <= 1000:
+            if limit <= 100:
+                c = 0
                 for cell in rows:
-                    dataSensorName = self.listS[c]
-                    dataSensorName.append(cell.value)
+                    self.d["dataSensor{0}".format(c)].append(cell.value)
                     c += 1
             else:
                 break;
             limit += 1
         print("--- %s seconds ---" % (time.time() - start_time))
+
+    #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    # updater
+    def update(self):
+        test = self.d["dataSensor1"]
+        print(test)
+
+
 
 
 if __name__ == "__main__":
