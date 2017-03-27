@@ -1,121 +1,30 @@
-from PyQt5 import QtCore, QtWidgets
-from PyQt5.QtWidgets import QWidget
-from GUI.Data import ReadFile
+import sys
 import time
 from collections import defaultdict
+from PyQt5.QtWidgets import QDialog, QApplication, qApp
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtWidgets import QMainWindow
+from PyQt5.QtWidgets import QWidget
+from GUI.UI.Ui_MainWindow import Ui_MainWindow
+from GUI.Data import ReadFile
 
-class Ui_MainWindow(object):
-
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1200, 780)
-        MainWindow.setMouseTracking(True)
-        self.layout()
-        self.groupboxSetup()
-        self.bottomLayout()
-        self.leftLayout()
-        self.rightLayoutPositioner()
-        self.leftLayoutPositioner()
-        self.rightLayout()
-        self.mainLayout()
-        self.menubar()
-        self.update()
-        MainWindow.setCentralWidget(self.centralWidget)
-        self.retranslateUi(MainWindow)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
-
-    # -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    #  Layout setup
-
-    def layout(self):
-        self.centralWidget = QtWidgets.QWidget(MainWindow)
-        self.centralWidget.setAutoFillBackground(False)
-        self.centralWidget.setObjectName("centralWidget")
-
-    def groupboxSetup(self):
-        self.groupBox = QtWidgets.QGroupBox(self.centralWidget)
-        self.groupBox.setObjectName("groupBox")
-        self.groupBox_2 = QtWidgets.QGroupBox(self.centralWidget)
-        self.groupBox_2.setObjectName("groupBox_2")
-        self.groupBox_3 = QtWidgets.QGroupBox(self.centralWidget)
-        self.groupBox_3.setObjectName("groupBox_3")
-
-
-    def bottomLayout(self):
-        self.bottomLayout = QtWidgets.QGridLayout()
-        self.bottomLayout.setContentsMargins(11, 9, 11, 11)
-        self.bottomLayout.setSpacing(6)
-        self.bottomLayout.setObjectName("bottomLayout")
-        self.bottomLayout.addWidget(self.groupBox_3, 0, 0, 1, 1)
-
-    def leftLayout(self):
-        self.leftLayout = QtWidgets.QGridLayout()
-        self.leftLayout.setContentsMargins(11, 11, 11, 11)
-        self.leftLayout.setSpacing(20)
-        self.leftLayout.setObjectName("leftLayout")
-        self.leftLayout.addWidget(self.groupBox, 0, 0, 2, 1)
-
-    def rightLayoutPositioner(self):
-        self.rightLayoutPositioner = QtWidgets.QGridLayout(self.groupBox_2)
-        self.rightLayoutPositioner.setContentsMargins(100, 100, 100, 100)
+class MyMainWindow(QMainWindow, Ui_MainWindow):
+    def __init__(self, parent=None):
+        super(MyMainWindow, self).__init__(parent)
+        qApp.installEventFilter(self)
+        self.setupUi(self)
         self.setupMappingVisualisation()
+        self.show()
 
-    def leftLayoutPositioner(self):
-        self.leftLayoutPositioner = QtWidgets.QGridLayout(self.groupBox)
-        self.leftLayoutPositioner.setContentsMargins(11, 11, 11, 11)
-        self.leftLayoutPositioner.setSpacing(6)
-        self.leftLayoutPositioner.setObjectName("label1")
-        self.label = QtWidgets.QLabel(self.groupBox)
-        self.label.setObjectName("label")
-        self.leftLayoutPositioner.addWidget(self.label, 0, 0, 1, 1)
+    def keyPressEvent(self, e):
 
-    def rightLayout(self):
-        self.rightLayout = QtWidgets.QGridLayout()
-        self.rightLayout.setContentsMargins(11, 11, 11, 11)
-        self.rightLayout.setSpacing(6)
-        self.rightLayout.setObjectName("layoutRight")
-        self.rightLayout.addWidget(self.groupBox_2, 0, 0, 1, 1)
+        if e.key() == Qt.Key_Escape:
+            self.update()
 
-    def mainLayout(self):
-        self.mainLayout = QtWidgets.QGridLayout(self.centralWidget)
-        self.mainLayout.setContentsMargins(9, 11, 11, 0)
-        self.mainLayout.setHorizontalSpacing(10)
-        self.mainLayout.setVerticalSpacing(10)
-        self.mainLayout.setObjectName("mainLayout")
-        self.mainLayout.addLayout(self.leftLayout, 0, 0, 1, 1)
-        self.mainLayout.addLayout(self.rightLayout, 0, 1, 1, 1)
-        self.mainLayout.addLayout(self.bottomLayout, 1, 0, 1, 2)
-        self.mainLayout.setColumnMinimumWidth(1, 2)
-        self.mainLayout.setColumnStretch(0, 1)
-        self.mainLayout.setColumnStretch(1, 2)
-        self.mainLayout.setRowStretch(0, 3)
-        self.mainLayout.setRowStretch(1, 1)
 
-    def menubar(self):
-        self.menuBar = QtWidgets.QMenuBar(MainWindow)
-        self.menuBar.setGeometry(QtCore.QRect(0, 0, 750, 21))
-        self.menuBar.setObjectName("menuBar")
-        MainWindow.setMenuBar(self.menuBar)
-        self.mainToolBar = QtWidgets.QToolBar(MainWindow)
-        self.mainToolBar.setObjectName("mainToolBar")
-        MainWindow.addToolBar(QtCore.Qt.TopToolBarArea, self.mainToolBar)
-        self.statusBar = QtWidgets.QStatusBar(MainWindow)
-        self.statusBar.setObjectName("statusBar")
-        MainWindow.setStatusBar(self.statusBar)
-        self.menuBar.addMenu('&files')
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.groupBox.setTitle(_translate("MainWindow", "GroupBox1"))
-        self.label.setText(_translate("MainWindow", "dit is de eerste label"))
-        self.groupBox_2.setTitle(_translate("MainWindow", "GroupBox2"))
-        self.groupBox_3.setTitle(_translate("MainWindow", "GroupBox3"))
-
-    # ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    # visualisation setup
     def setupMappingVisualisation(self):
-        layout = self.rightLayoutPositioner
+        layout = self.gridLayout_3
         self.dictionary = {}
         i = 24
         j = 8
@@ -159,7 +68,7 @@ class Ui_MainWindow(object):
         limit = 0
         self.d = defaultdict(list)
         for rows in object1.ws.rows:
-            if limit <= 100:
+            if limit <= 3:
                 c = 0
                 for cell in rows:
                     self.d["dataSensor{0}".format(c)].append(cell.value)
@@ -172,18 +81,27 @@ class Ui_MainWindow(object):
     #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # updater
     def update(self):
-        test = self.dictionary["widget1"]
-        test.setStyleSheet("background-color: black")
+        FPS = 1
+        lastFrameTime = time.time()
+        start_time = time.time()
+        test2 = self.dictionary["widget1"]
+        test = self.d.get("dataSensor1")
+        print("--- %s seconds ---" % (time.time() - start_time))
+        for x in test:
+            test2.setStyleSheet("background-color: rgb(244, 0, {0})".format(x * 170))
+            while True:
+                currentTime = time.time()
+                sleepTime = 1. / FPS - (currentTime - lastFrameTime)
+                if sleepTime > 0:
+                    time.sleep(sleepTime)
+                    x += x
+                    print(x)
+                    break;
 
+                lastFrameTime = currentTime
+        print("--- %s seconds ---" % (time.time() - start_time))
 
-
-
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    win = MyMainWindow()
     sys.exit(app.exec_())
-
