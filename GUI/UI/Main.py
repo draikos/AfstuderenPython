@@ -2,10 +2,8 @@ import sys
 import time
 from collections import defaultdict
 
-from PyQt5.QtGui import QColor
-from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import QDialog, QApplication, qApp
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt, QEvent, QThread, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QWidget
 
@@ -15,7 +13,8 @@ from GUI.Data import ReadFile
 class MyMainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
-        qApp.installEventFilter(self)
+        MyMainWindow.d = defaultdict(list)
+        MyMainWindow.dictionary = {}
         self.setupUi(self)
         self.setupMappingVisualisation()
         self.show()
@@ -23,13 +22,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def keyPressEvent(self, e):
 
         if e.key() == Qt.Key_Escape:
-            self.update()
 
+            self.update = DataThread()
+            self.update.start()
+            self.update.progress.connect(self.paintWidget)
+
+
+    def paintWidget(self, x):
+        print(x)
 
 
     def setupMappingVisualisation(self):
         layout = self.gridLayout_3
-        self.dictionary = {}
+
         counterValue = 0
         i = 24
         j = 8
@@ -75,7 +80,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         start_time = time.time()
         object1 = ReadFile.ReadFile()
         limit = 0
-        self.d = defaultdict(list)
         for rows in object1.ws.rows:
             if limit <= 600:
                 c = 0
@@ -89,6 +93,20 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
     # updater
+
+class DataThread(QThread):
+    progress = pyqtSignal(int)
+
+    def __init__(self):
+        QThread.__init__(self)
+        self.d = MyMainWindow.d
+        self.dictionary = MyMainWindow.dictionary
+
+
+    def __del__(self):
+        self.wait()
+
+    @pyqtSlot()
     def update(self):
         FPS = 60
         counterSensor = 0
@@ -104,21 +122,26 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 sleepTime = 1. / FPS - (currentTime - lastFrameTime)
                 if sleepTime > 0:
                     for x in range(len(self.d)):
+                        if x == 0 or x == 7 or x == 184 or x == 191:
+                            pass
+                        else:
+                            print("test")
+                            value = test.get("dataSensor{0}".format(x))[v]
+                            # widget = test2["widget{0}".format(x)].setStyleSheet(
+                            #     "background-color: rgb({0}, {0}, {0})".format(value * 150))
+                            self.progress.emit(x)
+                            DataThread.wait(1000)
 
-                        value = test.get("dataSensor{0}".format(x))[v]
 
-                        test2["widget{0}".format(x)].setStyleSheet("background-color: rgb(244, {0}, {0})".format(value * 150))
-                        test2["widget{0}".format(x)].repaint()
-
-                        counterSensor += 1
 
                     break;
                 lastFrameTime = currentTime
         print("--- %s seconds ---" % (time.time() - start_time))
 
-    def updateColor(self, test2):
+    def run(self):
+        self.update()
 
-        print("test")
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = MyMainWindow()
