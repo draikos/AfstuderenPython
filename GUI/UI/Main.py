@@ -4,6 +4,8 @@ from collections import defaultdict
 
 import matplotlib
 # Make sure that we are using QT5
+from PyQt5.QtWidgets import QSizePolicy
+
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
@@ -21,24 +23,22 @@ from GUI.Data import ReadFile
 class MyMainWindow(QMainWindow, Ui_MainWindow):
     rowValue = pyqtSignal(int)
     def __init__(self, parent=None):
-
         super(MyMainWindow, self).__init__(parent)
-        MyMainWindow.d = defaultdict(list)
-        MyMainWindow.dictionary = {}
+        self.d = defaultdict(list)
+        self.dictionary = {}
+        self.myList = list()
+
         self.setupUi(self)
         self.setupMappingVisualisation()
-
+        self.addmpl()
         self.show()
 
     def keyPressEvent(self, e):
-
         if e.key() == Qt.Key_Escape:
             self.update()
-            self.rowValue.connect(self.addmpl)
 
     def setupMappingVisualisation(self):
         layout = self.gridLayout_3
-
         counterValue = 0
         i = 24
         j = 8
@@ -55,7 +55,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         layout.addWidget(test, t, g)
                         counterValue+= 1
 
-
                     else:
                         self.dictionary["widget{0}".format(counterValue)] = QWidget()
                         test = self.dictionary.get("widget{0}".format(counterValue))
@@ -67,7 +66,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         test.setStyleSheet("background-color: red")
                         layout.addWidget(test, t, g)
                         counterValue += 1
-
             else:
                 for t in range(j):
                     self.dictionary["widget{0}".format(counterValue)] = QWidget()
@@ -80,7 +78,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     test.setStyleSheet("background-color: green")
                     layout.addWidget(test, t, g)
                     counterValue += 1
-
         start_time = time.time()
         object1 = ReadFile.ReadFile()
         limit = 0
@@ -96,7 +93,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         print("--- %s seconds ---" % (time.time() - start_time))
 
     def update(self):
-
         FPS = 60
         counterSensor = 0
         counterValue = 0
@@ -106,7 +102,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         test = self.d
         print("--- %s seconds ---" % (time.time() - start_time))
         for v in range(len(self.d.get("dataSensor0"))):
-            self.rowValue.emit(v)
             QApplication.processEvents()
             while True:
                 currentTime = time.time()
@@ -116,28 +111,45 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         if x == 0 or x == 7 or x == 184 or x == 191:
                             pass
                         else:
-
                             value = test.get("dataSensor{0}".format(x))[v]
                             test2["widget{0}".format(x)].setStyleSheet(
                                 "background-color: rgb(244, {0}, {0})".format(value * 150))
                             test2["widget{0}".format(x)].repaint()
+                    self.updatePlot(v)
                     break;
                 lastFrameTime = currentTime
 
         print("--- %s seconds ---" % (time.time() - start_time))
 
-    def addmpl(self, v):
-        print(v)
+    def addmpl(self):
+        self.test = mpl()
+        self.gridLayout.addWidget(self.test)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setContentsMargins(0, 0, 0 , 0)
 
-        # fig1 = Figure()
-        # ax1f1 = fig1.add_subplot(111)
-        # value = self.d.get("dataSensor1")
-        # ax1f1.plot(value)
-        # self.canvas = FigureCanvas(fig1)
-        # self.gridLayout.addWidget(self.canvas)
-        # self.canvas.draw()
+    def updatePlot(self, v):
+        if not self.myList :
+            for c in self.d.get("dataSensor1"):
+                self.myList.append(c)
+                print("once")
+        markers_on = [v]
+        self.test.axes.plot(self.myList, color="black")
+        self.test.axes.axvline(x = markers_on, color="red")
+        self.test.draw()
+        del(self.test.axes.lines[-1])
 
 
+class mpl(FigureCanvas):
+    def __init__(self, parent=None):
+        self.fig = Figure()
+        self.fig.set_tight_layout("tight")
+        self.axes = self.fig.add_subplot(111)
+
+        FigureCanvas.__init__(self, self.fig)
+        self.setParent(parent)
+        FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
+        FigureCanvas(self.fig)
+        FigureCanvas.draw(self)
 
 
 
@@ -154,9 +166,8 @@ class DataThread(QThread):
         print()
 
 
+
 if __name__ == '__main__':
-
-
     app = QApplication(sys.argv)
     main = MyMainWindow()
     sys.exit(app.exec_())
