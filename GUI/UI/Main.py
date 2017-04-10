@@ -152,6 +152,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 if not indexes:
                     pass;
                 else:
+                    print("test")
                     # for index in np.nditer(indexes):
                     #     searchRange = index + 20
                     #     prevValue = self.d.get("dataSensor1")[index]
