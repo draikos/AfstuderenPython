@@ -8,7 +8,7 @@ matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 import numpy as np
-import peakutils
+from GUI.Data.detect_peaks import detect_peaks
 
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtWidgets import QDialog, QApplication, qApp
@@ -28,7 +28,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.d = defaultdict(list)
         self.dictionary = {}
         self.myList = list()
-
+        self.LATdictionary = defaultdict(list)
         self.setupUi(self)
         self.setupMappingVisualisation()
         self.addmpl()
@@ -87,7 +87,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         object1 = ReadFile.ReadFile()
         limit = 0
         for rows in object1.ws.rows:
-            if limit <= 100:
+            if limit <= 1000:
                 c = 0
                 for cell in rows:
                     self.d["dataSensor{0}".format(c)].append(cell.value)
@@ -120,7 +120,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                             test2["widget{0}".format(x)].setStyleSheet(
                                 "background-color: rgb(244, {0}, {0})".format(value * 150))
                             test2["widget{0}".format(x)].repaint()
-                    # self.updatePlot(v)
+                    self.updatePlot(v)
                     break;
                 lastFrameTime = currentTime
 
@@ -148,30 +148,33 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             if v == 0 or v == 7 or v == 183 or v == 191:
                 pass;
             else:
-                indexes = peakutils.indexes(self.d.get("dataSensor{0}".format(v)), thres=1, min_dist=30)
-                if not indexes:
-                    pass;
-                else:
-                    print("test")
-                    # for index in np.nditer(indexes):
-                    #     searchRange = index + 20
-                    #     prevValue = self.d.get("dataSensor1")[index]
-                    #     loopAmount = 0
-                    #     highestLoop = 0
-                    #     highestValue = 0
-                    #     for value in self.d.get("dataSensor1")[index:searchRange]:
-                    #         currentValue = value
-                    #         value -= prevValue
-                    #         value = abs(value)
-                    #         prevValue = currentValue
-                    #         if loopAmount == 0:
-                    #              highestValue = value
-                    #              pass;
-                    #         elif highestValue < value:
-                    #             highestValue = value
-                    #             highestLoop = loopAmount
-                    #         loopAmount += 1
-                    #     print(str(highestValue) + " " + str(indexes + highestLoop) +" "+ str(v))
+                indexes = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=30, mph=0.8)
+                print(str(indexes) +" "+ str(v))
+                # print(str(indexes) + " "+ str(v))
+        #         if not indexes:
+        #             pass;
+        #         else:
+        #             for index in np.nditer(indexes):
+        #                 searchRange = index + 30
+        #                 prevValue = self.d.get("dataSensor{0}".format(v))[index]
+        #                 loopAmount = 0
+        #                 highestLoop = 0
+        #                 highestValue = 0
+        #                 for value in self.d.get("dataSensor{0}".format(v))[index:searchRange]:
+        #                     currentValue = value
+        #                     value -= prevValue
+        #                     value = abs(value)
+        #                     prevValue = currentValue
+        #                     if loopAmount == 0:
+        #                          highestValue = value
+        #                          pass;
+        #                     elif highestValue < value:
+        #                         highestValue = value
+        #                         highestLoop = loopAmount
+        #                     loopAmount += 1
+        #                 indexes = index + highestLoop
+        #                 self.LATdictionary["Sensor{0}".format(v)].append(indexes)
+        # # print(self.LATdictionary.keys())
 
 class mpl(FigureCanvas):
     def __init__(self, parent=None):
