@@ -143,38 +143,37 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         del(self.test.axes.lines[-1])
 
     def peakDetection(self):
-        myList = list()
+        testList = list()
         for v in range(len(self.d)):
-            if v == 0 or v == 7 or v == 183 or v == 191:
-                pass;
-            else:
-                indexes = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=30, mph=0.8)
-                print(str(indexes) +" "+ str(v))
-                # print(str(indexes) + " "+ str(v))
-        #         if not indexes:
-        #             pass;
-        #         else:
-        #             for index in np.nditer(indexes):
-        #                 searchRange = index + 30
-        #                 prevValue = self.d.get("dataSensor{0}".format(v))[index]
-        #                 loopAmount = 0
-        #                 highestLoop = 0
-        #                 highestValue = 0
-        #                 for value in self.d.get("dataSensor{0}".format(v))[index:searchRange]:
-        #                     currentValue = value
-        #                     value -= prevValue
-        #                     value = abs(value)
-        #                     prevValue = currentValue
-        #                     if loopAmount == 0:
-        #                          highestValue = value
-        #                          pass;
-        #                     elif highestValue < value:
-        #                         highestValue = value
-        #                         highestLoop = loopAmount
-        #                     loopAmount += 1
-        #                 indexes = index + highestLoop
-        #                 self.LATdictionary["Sensor{0}".format(v)].append(indexes)
-        # # print(self.LATdictionary.keys())
+            print(v)
+            print(len(self.LATdictionary))
+            test = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=30, mph=0.8)
+            testList.append(test)
+            for index in testList[v]:
+                searchRange = index + 30
+                prevValue = self.d.get("dataSensor{0}".format(v))[index]
+                loopAmount = 0
+                highestLoop = 0
+                highestValue = 0
+                for value in self.d.get("dataSensor{0}".format(v))[index:searchRange]:
+                    currentValue = value
+                    value -= prevValue
+                    value = abs(value)
+                    prevValue = currentValue
+                    if loopAmount == 0:
+                         highestValue = value
+                         pass;
+                    elif highestValue < value:
+                        highestValue = value
+                        highestLoop = loopAmount
+                    loopAmount += 1
+                indexes = index + highestLoop
+                self.LATdictionary["Sensor{0}".format(v)].append(indexes)
+
+    def calculateWave(self):
+        print("test")
+
+
 
 class mpl(FigureCanvas):
     def __init__(self, parent=None):
