@@ -26,13 +26,16 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
         self.d = defaultdict(list)
+        self.waveDictionary = defaultdict(list)
         self.dictionary = {}
         self.myList = list()
         self.LATdictionary = defaultdict(list)
+
         self.setupUi(self)
         self.setupMappingVisualisation()
-        self.addmpl()
         self.peakDetection()
+        self.calculateWave()
+        self.addmpl()
         self.show()
 
     def keyPressEvent(self, e):
@@ -40,6 +43,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.update()
         if e.key() == Qt.Key_X:
             self.peakDetection()
+            self.calculateWave()
 
 
     def setupMappingVisualisation(self):
@@ -105,7 +109,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         start_time = time.time()
         test2 = self.dictionary
         test = self.d
-        print("--- %s seconds ---" % (time.time() - start_time))
         for v in range(len(self.d.get("dataSensor0"))):
             QApplication.processEvents()
             while True:
@@ -123,8 +126,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     self.updatePlot(v)
                     break;
                 lastFrameTime = currentTime
-
-        print("--- %s seconds ---" % (time.time() - start_time))
 
     def addmpl(self):
         self.test = mpl()
@@ -145,10 +146,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def peakDetection(self):
         testList = list()
         for v in range(len(self.d)):
-            print(v)
-            print(len(self.LATdictionary))
             test = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=30, mph=0.8)
-            testList.append(test)
+            if len(detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=30, mph=0.8)) == 0:
+                testList.append([0])
+            else:
+                testList.append(test)
             for index in testList[v]:
                 searchRange = index + 30
                 prevValue = self.d.get("dataSensor{0}".format(v))[index]
@@ -171,7 +173,30 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.LATdictionary["Sensor{0}".format(v)].append(indexes)
 
     def calculateWave(self):
-        print("test")
+        for c in range(len(self.LATdictionary)):
+            finalRow = len(self.LATdictionary) - 8
+
+            if c%8 == 0 or c%8 == 7 or c <= 7 or c >= finalRow:
+                print("")
+            else:
+                surroundingSensors = [(c - 9), (c - 8), (c - 7), (c - 1), (c + 1), (c + 7), (c + 8), (c + 9)]
+                for value in self.LATdictionary.get("Sensor{0}".format(c)):
+                    lengthWaveDictionary = len(self.waveDictionary) + 1
+                    # print(str(value) +" dit is value van eerste for loop")
+                    for test in surroundingSensors:
+                        sensorValueCheck = self.LATdictionary.get("Sensor{0}".format(test))
+                        for valueCheck in sensorValueCheck:
+                            if value-4 <= valueCheck <= value+4:
+                                # print(str(valueCheck) +" "+ str(test))
+                                if [valueCheck,test] in [x for v in self.waveDictionary.values() for x in v]:
+                                    print("duplicate!" + str([valueCheck, test]))
+                                    pass
+                                else:
+                                    self.waveDictionary["wave{0}".format(lengthWaveDictionary)].append([valueCheck, test])
+                print(self.waveDictionary)
+                print(len(self.waveDictionary))
+
+
 
 
 
@@ -180,7 +205,6 @@ class mpl(FigureCanvas):
         self.fig = Figure()
         self.fig.set_tight_layout("tight")
         self.axes = self.fig.add_subplot(111)
-
         FigureCanvas.__init__(self, self.fig)
         self.setParent(parent)
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
