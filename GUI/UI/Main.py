@@ -102,7 +102,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         print("--- %s seconds ---" % (time.time() - start_time))
 
     def update(self):
-        FPS = 60
         counterSensor = 0
         counterValue = 0
         lastFrameTime = time.time()
@@ -112,20 +111,16 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         for v in range(len(self.d.get("dataSensor0"))):
             QApplication.processEvents()
             while True:
-                currentTime = time.time()
-                sleepTime = 1. / FPS - (currentTime - lastFrameTime)
-                if sleepTime > 0:
-                    for x in range(len(self.d)):
-                        if x == 0 or x == 7 or x == 184 or x == 191:
-                            pass
-                        else:
-                            value = test.get("dataSensor{0}".format(x))[v]
-                            test2["widget{0}".format(x)].setStyleSheet(
-                                "background-color: rgb(244, {0}, {0})".format(value * 150))
-                            test2["widget{0}".format(x)].repaint()
-                    self.updatePlot(v)
-                    break;
-                lastFrameTime = currentTime
+                for x in range(len(self.d)):
+                    if x == 0 or x == 7 or x == 184 or x == 191:
+                        pass
+                    else:
+                        value = test.get("dataSensor{0}".format(x))[v]
+                        test2["widget{0}".format(x)].setStyleSheet(
+                            "background-color: rgb(244, {0}, {0})".format(value * 150))
+                        test2["widget{0}".format(x)].repaint()
+                # self.updatePlot(v)
+                break;
 
     def addmpl(self):
         self.test = mpl()
@@ -181,21 +176,22 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             else:
                 surroundingSensors = [(c - 9), (c - 8), (c - 7), (c - 1), (c + 1), (c + 7), (c + 8), (c + 9)]
                 for value in self.LATdictionary.get("Sensor{0}".format(c)):
-                    lengthWaveDictionary = len(self.waveDictionary) + 1
+                    lengthWaveDictionary = [value, c]
                     # print(str(value) +" dit is value van eerste for loop")
+                    if [value, c] in [x for v in self.waveDictionary.values() for x in v]:
+                        for key, values in self.waveDictionary.items():
+                            if [value, c] in values:
+                                lengthWaveDictionary = key
                     for test in surroundingSensors:
                         sensorValueCheck = self.LATdictionary.get("Sensor{0}".format(test))
                         for valueCheck in sensorValueCheck:
                             if value-4 <= valueCheck <= value+4:
                                 # print(str(valueCheck) +" "+ str(test))
                                 if [valueCheck,test] in [x for v in self.waveDictionary.values() for x in v]:
-                                    print("duplicate!" + str([valueCheck, test]))
                                     pass
                                 else:
-                                    self.waveDictionary["wave{0}".format(lengthWaveDictionary)].append([valueCheck, test])
-                print(self.waveDictionary)
-                print(len(self.waveDictionary))
-
+                                    self.waveDictionary["{0}".format(lengthWaveDictionary)].append([valueCheck, test])
+        print(self.waveDictionary)
 
 
 
@@ -210,6 +206,7 @@ class mpl(FigureCanvas):
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas(self.fig)
         FigureCanvas.draw(self)
+
 
 
 
