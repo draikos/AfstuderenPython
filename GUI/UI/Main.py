@@ -1,6 +1,7 @@
 import sys
 import time
 from collections import defaultdict
+from collections import OrderedDict
 
 import matplotlib
 # Make sure that we are using QT5
@@ -37,6 +38,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.calculateWave()
         self.addmpl()
         self.show()
+        self.update()
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
@@ -102,12 +104,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         print("--- %s seconds ---" % (time.time() - start_time))
 
     def update(self):
-        counterSensor = 0
-        counterValue = 0
-        lastFrameTime = time.time()
-        start_time = time.time()
-        test2 = self.dictionary
-        test = self.d
+        sensors = self.dictionary
+        dataOfSensors = self.d
+        keyPlace = list()
+        color = (["red", "orange", "yellow", "green", "blue", "violet", "blue", "black", "grey"])
+        print(color[1])
         for v in range(len(self.d.get("dataSensor0"))):
             QApplication.processEvents()
             while True:
@@ -115,11 +116,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     if x == 0 or x == 7 or x == 184 or x == 191:
                         pass
                     else:
-                        value = test.get("dataSensor{0}".format(x))[v]
-                        test2["widget{0}".format(x)].setStyleSheet(
-                            "background-color: rgb(244, {0}, {0})".format(value * 150))
-                        test2["widget{0}".format(x)].repaint()
-                # self.updatePlot(v)
+                        if [v, x] in [x for v in self.orderedWaveCalculations.values() for x in v]:
+                            for key, values in self.waveDictionary.items():
+                                if [v, x] in values and [v, x] == values[-1]:
+                                    if key in keyPlace:
+                                        pass
+                                    else:
+                                        keyPlace.append(key)
+                                        print(keyPlace.index(key))
+                                    sensors["widget{0}".format(x)].setStyleSheet("background-color: {0}".format(color[keyPlace.index(key)]))
+                                    keyPlace.remove(key)
+                                    print(key)
+                                sensors["widget{0}".format(x)].repaint()
+                self.updatePlot(v)
                 break;
 
     def addmpl(self):
@@ -191,8 +200,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                     pass
                                 else:
                                     self.waveDictionary["{0}".format(lengthWaveDictionary)].append([valueCheck, test])
-        print(self.waveDictionary)
-
+        self.orderedWaveCalculations = OrderedDict(sorted(self.waveDictionary.items(), key=lambda x: x[1]))
 
 
 
