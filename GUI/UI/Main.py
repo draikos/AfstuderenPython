@@ -31,6 +31,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.dictionary = {}
         self.myList = list()
         self.LATdictionary = defaultdict(list)
+        self.num_plots = 0
 
         self.setupUi(self)
         self.setupMappingVisualisation()
@@ -93,7 +94,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         object1 = ReadFile.ReadFile()
         limit = 0
         for rows in object1.ws.rows:
-            if limit <= 1000:
+            if limit <= 100:
                 c = 0
                 for cell in rows:
                     self.d["dataSensor{0}".format(c)].append(cell.value)
@@ -107,6 +108,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         sensors = self.dictionary
         dataOfSensors = self.d
         keyPlace = list()
+        tstart = time.time()
         color = (["red", "orange", "yellow", "green", "blue", "violet", "blue", "black", "grey"])
         print(color[1])
         for v in range(len(self.d.get("dataSensor0"))):
@@ -118,34 +120,42 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     else:
                         if [v, x] in [x for v in self.orderedWaveCalculations.values() for x in v]:
                             for key, values in self.waveDictionary.items():
-                                if [v, x] in values and [v, x] == values[-1]:
+                                if [v, x] in values:
                                     if key in keyPlace:
-                                        pass
+                                        sensors["widget{0}".format(x)].setStyleSheet(
+                                            "background-color: {0}".format(color[keyPlace.index(key)]))
                                     else:
+                                        if len(keyPlace) == 9:
+                                            keyPlace.clear()
+                                            print("cleared")
                                         keyPlace.append(key)
                                         print(keyPlace.index(key))
-                                    sensors["widget{0}".format(x)].setStyleSheet("background-color: {0}".format(color[keyPlace.index(key)]))
-                                    keyPlace.remove(key)
-                                    print(key)
+                                        sensors["widget{0}".format(x)].setStyleSheet(
+                                            "background-color: {0}".format(color[keyPlace.index(key)]))
+
+
                                 sensors["widget{0}".format(x)].repaint()
                 self.updatePlot(v)
+
                 break;
+        print(time.time() - tstart)
 
     def addmpl(self):
         self.test = mpl()
         self.gridLayout.addWidget(self.test)
         self.gridLayout.setSpacing(0)
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
-
-    def updatePlot(self, v):
-        if not self.myList :
+        if not self.myList:
             for c in self.d.get("dataSensor1"):
                 self.myList.append(c)
-        markers_on = [v]
         self.test.axes.plot(self.myList, color="black")
-        self.test.axes.axvline(x = markers_on, color="red")
         self.test.draw()
-        del(self.test.axes.lines[-1])
+
+    def updatePlot(self, v):
+        lines = self.test.axes.axvline(x=[v], color="red")
+        self.test.axes.draw_artist(lines)
+        self.test.draw()
+        self.test.axes.lines[-1].remove()
 
     def peakDetection(self):
         testList = list()
