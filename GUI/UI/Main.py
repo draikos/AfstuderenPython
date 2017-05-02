@@ -2,14 +2,13 @@ import sys
 import time
 from collections import defaultdict
 from collections import OrderedDict
+import numpy as np
+import os
 
 import matplotlib
-# Make sure that we are using QT5
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-import numpy as np
-from GUI.Data.detect_peaks import detect_peaks
 
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtWidgets import QDialog, QApplication, qApp
@@ -20,6 +19,7 @@ from PyQt5.QtWidgets import QWidget
 
 from GUI.UI.Ui_MainWindow import Ui_MainWindow
 from GUI.Data import ReadFile
+from GUI.Data.detect_peaks import detect_peaks
 
 
 class MyMainWindow(QMainWindow, Ui_MainWindow):
@@ -90,19 +90,24 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     test.setStyleSheet("background-color: green")
                     layout.addWidget(test, t, g)
                     counterValue += 1
-        start_time = time.time()
-        object1 = ReadFile.ReadFile()
-        limit = 0
-        for rows in object1.ws.rows:
-            if limit <= 100:
-                c = 0
-                for cell in rows:
-                    self.d["dataSensor{0}".format(c)].append(cell.value)
-                    c += 1
-            else:
+
+        filename = r"C:\Users\758051\Desktop\Jelle van den Toren\Hovig_20_10_14_AF_LA2.E01"
+        with open(filename, 'rb') as fid:
+            fid.seek(4608, os.SEEK_SET)
+            data_array = np.fromfile(fid, np.int16).reshape((-1, 256)).T
+            gradient = max(np.gradient(data_array[191]))
+        i = 0
+        sensorID = 0
+        for value in data_array:
+            if sensorID >= 192:
                 break;
-            limit += 1
-        print("--- %s seconds ---" % (time.time() - start_time))
+            else:
+                for i in range(len(value)):
+                    while i < 100:
+                        self.d["dataSensor{0}".format(sensorID)].append(value[i] / gradient)
+                        i += 1
+                    sensorID += 1
+                    break;
 
     def update(self):
         sensors = self.dictionary
