@@ -91,7 +91,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     layout.addWidget(test, t, g)
                     counterValue += 1
 
-        filename = r"C:\Users\758051\Desktop\Jelle van den Toren\Hovig_20_10_14_AF_LA2.E01"
+        filename = r"C:\Users\draikos\Downloads\Hovig_20_10_14_AF_LA2.E01"
         with open(filename, 'rb') as fid:
             fid.seek(4608, os.SEEK_SET)
             data_array = np.fromfile(fid, np.int16).reshape((-1, 256)).T
@@ -216,6 +216,20 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                 else:
                                     self.waveDictionary["{0}".format(lengthWaveDictionary)].append([valueCheck, test])
         self.orderedWaveCalculations = OrderedDict(sorted(self.waveDictionary.items(), key=lambda x: x[1]))
+        self.cleanUpWave()
+
+
+    def cleanUpWave(self):
+        self.cleanWaveList = defaultdict(list)
+        # test = self.waveDictionary.items()
+        test = self.waveDictionary.items()
+        for value in test:
+            if len(value[1]) < 4:
+                pass
+            else:
+                self.cleanWaveList.append()
+        print(self.cleanWaveList)
+
 
 
 
