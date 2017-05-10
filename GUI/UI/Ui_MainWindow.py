@@ -60,7 +60,7 @@ class Ui_MainWindow(object):
         self.gridLayout_6.setColumnStretch(0, 1)
         self.gridLayout_6.setColumnStretch(1, 2)
         self.gridLayout_6.setRowStretch(0, 3)
-        self.gridLayout_6.setRowStretch(1, 1)
+        self.gridLayout_6.setRowStretch(2, 1)
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 750, 21))

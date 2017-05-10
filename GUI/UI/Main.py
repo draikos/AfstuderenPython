@@ -32,6 +32,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.myList = list()
         self.LATdictionary = defaultdict(list)
         self.num_plots = 0
+        self.cleanedUpWaveDictionary = defaultdict(list)
 
         self.setupUi(self)
         self.setupMappingVisualisation()
@@ -113,9 +114,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         sensors = self.dictionary
         dataOfSensors = self.d
         keyPlace = list()
-        tstart = time.time()
-        color = (["red", "orange", "yellow", "green", "blue", "violet", "blue", "black", "grey"])
-        print(color[1])
+        color = (["red", "orange", "yellow", "pink", "blue", "violet", "blue", "black", "grey"])
         for v in range(len(self.d.get("dataSensor0"))):
             QApplication.processEvents()
             while True:
@@ -132,18 +131,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                     else:
                                         if len(keyPlace) == 9:
                                             keyPlace.clear()
-                                            print("cleared")
                                         keyPlace.append(key)
-                                        print(keyPlace.index(key))
                                         sensors["widget{0}".format(x)].setStyleSheet(
                                             "background-color: {0}".format(color[keyPlace.index(key)]))
 
-
                                 sensors["widget{0}".format(x)].repaint()
                 self.updatePlot(v)
-
                 break;
-        print(time.time() - tstart)
 
     def addmpl(self):
         self.test = mpl()
@@ -215,23 +209,24 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                     pass
                                 else:
                                     self.waveDictionary["{0}".format(lengthWaveDictionary)].append([valueCheck, test])
-        self.orderedWaveCalculations = OrderedDict(sorted(self.waveDictionary.items(), key=lambda x: x[1]))
         self.cleanUpWave()
 
-
     def cleanUpWave(self):
-        self.cleanWaveList = defaultdict(list)
-        # test = self.waveDictionary.items()
-        test = self.waveDictionary.items()
-        for value in test:
+
+        dictionary = self.waveDictionary.items()
+        for value in dictionary:
             if len(value[1]) < 4:
                 pass
             else:
-                self.cleanWaveList.append()
-        print(self.cleanWaveList)
+                for values in value[1]:
+                    print(values)
+                    self.cleanedUpWaveDictionary[value[0]].append(values)
+        self.orderedWaveCalculations = OrderedDict(sorted(self.cleanedUpWaveDictionary.items(), key=lambda x: x[1]))
+        for value in self.cleanedUpWaveDictionary.items():
+            print(value)
 
-
-
+    def redrawGraph(self):
+        print()
 
 class mpl(FigureCanvas):
     def __init__(self, parent=None):
