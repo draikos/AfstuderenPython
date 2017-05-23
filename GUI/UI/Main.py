@@ -26,6 +26,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     rowValue = pyqtSignal(int)
     def __init__(self, parent=None):
         super(MyMainWindow, self).__init__(parent)
+        # initialization of the class wide variables
         self.d = defaultdict(list)
         self.waveDictionary = defaultdict(list)
         self.dictionary = {}
@@ -42,6 +43,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.show()
         self.update()
 
+
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
             self.update()
@@ -49,10 +51,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.peakDetection()
             self.calculateWave()
 
-
+#   setup of the color mapping part
     def setupMappingVisualisation(self):
         layout = self.gridLayout_3
         counterValue = 0
+        # hardcoded, need to be fixed
         i = 24
         j = 8
         for g in range(i):
@@ -92,11 +95,15 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     layout.addWidget(test, t, g)
                     counterValue += 1
 
-        filename = r"C:\Users\draikos\Downloads\Hovig_20_10_14_AF_LA2.E01"
+        # hardcoded don't forget to fix
+        # Reading of the .E01 files
+        filename = r"C:\Users\758051\Desktop\Jelle van den Toren\Hovig_20_10_14_AF_LA2.E01"
         with open(filename, 'rb') as fid:
             fid.seek(4608, os.SEEK_SET)
             data_array = np.fromfile(fid, np.int16).reshape((-1, 256)).T
             gradient = max(np.gradient(data_array[191]))
+
+        # filling a dictionary with the following data [sensor, [all the data in the sensor from .E01 file]]
         i = 0
         sensorID = 0
         for value in data_array:
@@ -110,11 +117,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     sensorID += 1
                     break;
 
+    #   update the GUI.
     def update(self):
         sensors = self.dictionary
         dataOfSensors = self.d
         keyPlace = list()
         color = (["red", "orange", "yellow", "pink", "blue", "violet", "blue", "black", "grey"])
+        # get the amount of times the code has to loop, error with this part, has to be rewritten so it doesn't loop to the end but takes another value
         for v in range(len(self.d.get("dataSensor0"))):
             QApplication.processEvents()
             while True:
@@ -139,6 +148,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.updatePlot(v)
                 break;
 
+    # Adds the graph at the bottom of the GUI
     def addmpl(self):
         self.test = mpl()
         self.gridLayout.addWidget(self.test)
@@ -150,12 +160,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.test.axes.plot(self.myList, color="black")
         self.test.draw()
 
+    # Updates the plot every millisecond so you see the red line move, so you can see at what millisecond you are.
     def updatePlot(self, v):
         lines = self.test.axes.axvline(x=[v], color="red")
         self.test.axes.draw_artist(lines)
         self.test.draw()
         self.test.axes.lines[-1].remove()
 
+    # checks the peaks so that the LAT can be calculated
     def peakDetection(self):
         testList = list()
         for v in range(len(self.d)):
@@ -186,33 +198,34 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.LATdictionary["Sensor{0}".format(v)].append(indexes)
 
     def calculateWave(self):
+        # Calculates what is part of a heartwave and what isn't, it first excludes the outer edges of the colormap because they are part of a different calculation
         for c in range(len(self.LATdictionary)):
             finalRow = len(self.LATdictionary) - 8
-
             if c%8 == 0 or c%8 == 7 or c <= 7 or c >= finalRow:
                 print("")
             else:
+                #checks for surrounding sensors
                 surroundingSensors = [(c - 9), (c - 8), (c - 7), (c - 1), (c + 1), (c + 7), (c + 8), (c + 9)]
                 for value in self.LATdictionary.get("Sensor{0}".format(c)):
                     lengthWaveDictionary = [value, c]
-                    # print(str(value) +" dit is value van eerste for loop")
+                    # checks if the current value + the sensor are already in the wavedictionary, the wavedictionary is a dictionary that contains all the heart waves
                     if [value, c] in [x for v in self.waveDictionary.values() for x in v]:
                         for key, values in self.waveDictionary.items():
                             if [value, c] in values:
                                 lengthWaveDictionary = key
+                    # checks whether the data passes certain criteria to become part of a wave, if the data passes the criteria it gets added to the wavedictionary.
                     for test in surroundingSensors:
                         sensorValueCheck = self.LATdictionary.get("Sensor{0}".format(test))
                         for valueCheck in sensorValueCheck:
                             if value-4 <= valueCheck <= value+4:
-                                # print(str(valueCheck) +" "+ str(test))
                                 if [valueCheck,test] in [x for v in self.waveDictionary.values() for x in v]:
                                     pass
                                 else:
                                     self.waveDictionary["{0}".format(lengthWaveDictionary)].append([valueCheck, test])
         self.cleanUpWave()
 
+    # this checks whether the wave itself passes certain criteria, if not it gets deleted.
     def cleanUpWave(self):
-
         dictionary = self.waveDictionary.items()
         for value in dictionary:
             if len(value[1]) < 4:
@@ -225,9 +238,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         for value in self.cleanedUpWaveDictionary.items():
             print(value)
 
+# work in progress
     def redrawGraph(self):
         print()
 
+# the class that creates the graph
 class mpl(FigureCanvas):
     def __init__(self, parent=None):
         self.fig = Figure()
@@ -238,23 +253,6 @@ class mpl(FigureCanvas):
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas(self.fig)
         FigureCanvas.draw(self)
-
-
-
-
-class DataThread(QThread):
-    progress = pyqtSignal(int)
-
-    def __init__(self):
-        QThread.__init__(self)
-
-    def __del__(self):
-        self.wait()
-
-    def run(self):
-        print()
-
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
