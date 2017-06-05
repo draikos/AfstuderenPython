@@ -33,6 +33,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.myList = list()
         self.LATdictionary = defaultdict(list)
         self.num_plots = 0
+        self.SensorNumber = 0
         self.cleanedUpWaveDictionary = defaultdict(list)
 
         self.setupUi(self)
@@ -50,6 +51,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         if e.key() == Qt.Key_X:
             self.peakDetection()
             self.calculateWave()
+        if e.key() == Qt.Key_1:
+            self.ChangePlotSensor()
 
 #   setup of the color mapping part
     def setupMappingVisualisation(self):
@@ -111,7 +114,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 break;
             else:
                 for i in range(len(value)):
-                    while i < 100:
+                    while i < 2000:
                         self.d["dataSensor{0}".format(sensorID)].append(value[i] / gradient)
                         i += 1
                     sensorID += 1
@@ -162,10 +165,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     # Updates the plot every millisecond so you see the red line move, so you can see at what millisecond you are.
     def updatePlot(self, v):
+
         lines = self.test.axes.axvline(x=[v], color="red")
         self.test.axes.draw_artist(lines)
         self.test.draw()
         self.test.axes.lines[-1].remove()
+
+    def ChangePlotSensor(self):
+        self.SensorNumber += 1
+        if not self.myList:
+            for c in self.d.get("dataSensor{0}".format(self.SensorNumber)):
+                self.myList.append(c)
+        self.test.axes.plot(self.myList, color="black")
+        self.test.draw()
 
     # checks the peaks so that the LAT can be calculated
     def peakDetection(self):
