@@ -53,7 +53,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
 #   setup of the color mapping part
     def setupMappingVisualisation(self):
-        layout = self.gridLayout_3
+        layout = self.gridLayout_2
         counterValue = 0
         # hardcoded, need to be fixed
         i = 24
@@ -97,7 +97,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         # hardcoded don't forget to fix
         # Reading of the .E01 files
-        filename = r"C:\Users\758051\Desktop\Jelle van den Toren\Hovig_20_10_14_AF_LA2.E01"
+        filename = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
         with open(filename, 'rb') as fid:
             fid.seek(4608, os.SEEK_SET)
             data_array = np.fromfile(fid, np.int16).reshape((-1, 256)).T
@@ -151,9 +151,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     # Adds the graph at the bottom of the GUI
     def addmpl(self):
         self.test = mpl()
-        self.gridLayout.addWidget(self.test)
-        self.gridLayout.setSpacing(0)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_3.addWidget(self.test)
+        self.gridLayout_3.setSpacing(0)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         if not self.myList:
             for c in self.d.get("dataSensor1"):
                 self.myList.append(c)
