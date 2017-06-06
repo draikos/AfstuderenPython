@@ -82,7 +82,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         test.setMaximumHeight(60)
                         test.setMaximumWidth(60)
                         test.setAutoFillBackground(True)
-                        test.setStyleSheet("background-color: red")
+                        test.setStyleSheet("background-color: white")
                         layout.addWidget(test, t, g)
                         counterValue += 1
             else:
@@ -94,7 +94,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     test.setMaximumHeight(60)
                     test.setMaximumWidth(60)
                     test.setAutoFillBackground(True)
-                    test.setStyleSheet("background-color: green")
+                    test.setStyleSheet("background-color: white")
                     layout.addWidget(test, t, g)
                     counterValue += 1
 
@@ -149,7 +149,22 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
                                 sensors["widget{0}".format(x)].repaint()
                 self.updatePlot(v)
+                self.turnBackColors(v)
                 break;
+
+
+    def turnBackColors(self, v):
+        pass
+        # for value in self.orderedWaveCalculations.values():
+        #     if v - 50 >= max(value[0]):
+        #         for x in value:
+        #             self.dictionary["widget{0}".format(x[1])].setStyleSheet("background-color: white")
+        #             self.dictionary["widget{0}".format(x[1])].repaint()
+
+
+
+
+
 
     # Adds the graph at the bottom of the GUI
     def addmpl(self):
@@ -214,7 +229,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         for c in range(len(self.LATdictionary)):
             finalRow = len(self.LATdictionary) - 8
             if c%8 == 0 or c%8 == 7 or c <= 7 or c >= finalRow:
-                print("")
+                pass
             else:
                 #checks for surrounding sensors
                 surroundingSensors = [(c - 9), (c - 8), (c - 7), (c - 1), (c + 1), (c + 7), (c + 8), (c + 9)]
@@ -244,15 +259,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 pass
             else:
                 for values in value[1]:
-                    print(values)
                     self.cleanedUpWaveDictionary[value[0]].append(values)
         self.orderedWaveCalculations = OrderedDict(sorted(self.cleanedUpWaveDictionary.items(), key=lambda x: x[1]))
-        for value in self.cleanedUpWaveDictionary.items():
-            print(value)
 
-# work in progress
-    def redrawGraph(self):
-        print()
 
 # the class that creates the graph
 class mpl(FigureCanvas):
