@@ -24,8 +24,8 @@ from GUI.Data.detect_peaks import detect_peaks
 
 class MyMainWindow(QMainWindow, Ui_MainWindow):
     rowValue = pyqtSignal(int)
-    def __init__(self, parent=None):
-        super(MyMainWindow, self).__init__(parent)
+    def __init__(self):
+        super().__init__()
         # initialization of the class wide variables
         self.d = defaultdict(list)
         self.waveDictionary = defaultdict(list)
@@ -36,13 +36,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.SensorNumber = 0
         self.cleanedUpWaveDictionary = defaultdict(list)
 
+
         self.setupUi(self)
         self.setupMappingVisualisation()
         self.peakDetection()
         self.calculateWave()
         self.addmpl()
         self.show()
-        self.update()
 
 
     def keyPressEvent(self, e):
@@ -53,6 +53,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.calculateWave()
         if e.key() == Qt.Key_1:
             self.ChangePlotSensor()
+        if e.key() == Qt.Key_Left:
+            print("test")
 
 #   setup of the color mapping part
     def setupMappingVisualisation(self):
@@ -154,16 +156,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
 
     def turnBackColors(self, v):
-        pass
-        # for value in self.orderedWaveCalculations.values():
-        #     if v - 50 >= max(value[0]):
-        #         for x in value:
-        #             self.dictionary["widget{0}".format(x[1])].setStyleSheet("background-color: white")
-        #             self.dictionary["widget{0}".format(x[1])].repaint()
+        for value in self.orderedWaveCalculations.values():
+            if v - 50 >= max(value[0]):
+                for x in value:
+                    self.dictionary["widget{0}".format(x[1])].setStyleSheet("background-color: white")
+                    self.dictionary["widget{0}".format(x[1])].repaint()
 
-
-
-
+    def mouseReleaseEvent(self, QMouseEvent):
+        print('(', QMouseEvent.x(), ', ', QMouseEvent.y(), ')')
 
 
     # Adds the graph at the bottom of the GUI
@@ -180,7 +180,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     # Updates the plot every millisecond so you see the red line move, so you can see at what millisecond you are.
     def updatePlot(self, v):
-
         lines = self.test.axes.axvline(x=[v], color="red")
         self.test.axes.draw_artist(lines)
         self.test.draw()
