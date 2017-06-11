@@ -9,6 +9,7 @@ import matplotlib
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
+from matplotlib.backend_bases import key_press_handler
 
 from PyQt5.QtWidgets import QSizePolicy
 from PyQt5.QtWidgets import QDialog, QApplication, qApp
@@ -43,6 +44,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.calculateWave()
         self.addmpl()
         self.show()
+        self.SensorClickEvent()
+
 
 
     def keyPressEvent(self, e):
@@ -52,9 +55,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.peakDetection()
             self.calculateWave()
         if e.key() == Qt.Key_1:
-            self.ChangePlotSensor()
-        if e.key() == Qt.Key_Left:
-            print("test")
+            self.changePlotSensor()
 
 #   setup of the color mapping part
     def setupMappingVisualisation(self):
@@ -84,6 +85,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         test.setMaximumHeight(60)
                         test.setMaximumWidth(60)
                         test.setAutoFillBackground(True)
+
                         test.setStyleSheet("background-color: white")
                         layout.addWidget(test, t, g)
                         counterValue += 1
@@ -163,8 +165,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     self.dictionary["widget{0}".format(x[1])].repaint()
 
     def mouseReleaseEvent(self, QMouseEvent):
-        print('(', QMouseEvent.x(), ', ', QMouseEvent.y(), ')')
+        print(QMouseEvent)
 
+    def SensorClickEvent(self):
+        for value in range(len(self.dictionary)):
+            self.dictionary["widget{0}".format(value)].mouseReleaseEvent=lambda event, value= value: self.updateShit(event, value)
+
+    def updateShit(self, event, value):
+        print(value)
 
     # Adds the graph at the bottom of the GUI
     def addmpl(self):
@@ -176,6 +184,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             for c in self.d.get("dataSensor1"):
                 self.myList.append(c)
         self.test.axes.plot(self.myList, color="black")
+        self.test.mpl_connect("button_release_event", self.mouseReleaseEvent)
         self.test.draw()
 
     # Updates the plot every millisecond so you see the red line move, so you can see at what millisecond you are.
@@ -185,13 +194,20 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.test.draw()
         self.test.axes.lines[-1].remove()
 
-    def ChangePlotSensor(self):
+    def changePlotSensor(self):
         self.SensorNumber += 1
         if not self.myList:
             for c in self.d.get("dataSensor{0}".format(self.SensorNumber)):
                 self.myList.append(c)
         self.test.axes.plot(self.myList, color="black")
         self.test.draw()
+        self.createRedLines()
+
+    def createRedLines(self):
+        for value in self.orderedWaveCalculations.values():
+            for v in value:
+                if(self.SensorNumber == v[1]):
+                    print(v)
 
     # checks the peaks so that the LAT can be calculated
     def peakDetection(self):
@@ -273,6 +289,7 @@ class mpl(FigureCanvas):
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas(self.fig)
         FigureCanvas.draw(self)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
