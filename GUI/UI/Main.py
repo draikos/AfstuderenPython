@@ -1,31 +1,30 @@
-import sys
-import time
-from collections import defaultdict
-from collections import OrderedDict
-import numpy as np
 import os
+import sys
+from collections import OrderedDict
+from collections import defaultdict
 
 import matplotlib
+import numpy as np
+
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
 from PyQt5.QtWidgets import QSizePolicy
-from PyQt5.QtWidgets import QDialog, QApplication, qApp
-from PyQt5.QtCore import Qt, QEvent, QThread, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QWidget
-
+from PyQt5.QtGui import QWheelEvent
 
 from GUI.UI.Ui_MainWindow import Ui_MainWindow
-from GUI.Data import ReadFile
 from GUI.Data.detect_peaks import detect_peaks
 
 
 class MyMainWindow(QMainWindow, Ui_MainWindow):
     rowValue = pyqtSignal(int)
-    def __init__(self, parent=None):
-        super(MyMainWindow, self).__init__(parent)
+    def __init__(self):
+        QMainWindow.__init__(self)
         # initialization of the class wide variables
         self.d = defaultdict(list)
         self.waveDictionary = defaultdict(list)
@@ -33,7 +32,12 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.myList = list()
         self.LATdictionary = defaultdict(list)
         self.num_plots = 0
+        self.SensorNumber = 0
         self.cleanedUpWaveDictionary = defaultdict(list)
+        self.stop = False
+        self.x = 0
+        self.currentIterations = 0
+        self.List = list()
 
         self.setupUi(self)
         self.setupMappingVisualisation()
@@ -41,7 +45,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.calculateWave()
         self.addmpl()
         self.show()
-        self.update()
+        self.SensorClickEvent()
+
 
 
     def keyPressEvent(self, e):
@@ -50,10 +55,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         if e.key() == Qt.Key_X:
             self.peakDetection()
             self.calculateWave()
+        if e.key() == Qt.Key_1:
+            self.stop = True
+        if e.key() == Qt.Key_2:
+            self.changePlotSensorUp()
+        if e.key() == Qt.Key_3:
+            self.changePlotSensorDown()
+        if e.key() == Qt.Key_4:
+            pass
+
 
 #   setup of the color mapping part
     def setupMappingVisualisation(self):
-        layout = self.gridLayout_3
+        layout = self.gridLayout_2
         counterValue = 0
         # hardcoded, need to be fixed
         i = 24
@@ -79,7 +93,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         test.setMaximumHeight(60)
                         test.setMaximumWidth(60)
                         test.setAutoFillBackground(True)
-                        test.setStyleSheet("background-color: red")
+                        test.setStyleSheet("background-color: white")
                         layout.addWidget(test, t, g)
                         counterValue += 1
             else:
@@ -91,13 +105,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     test.setMaximumHeight(60)
                     test.setMaximumWidth(60)
                     test.setAutoFillBackground(True)
-                    test.setStyleSheet("background-color: green")
+                    test.setStyleSheet("background-color: white")
                     layout.addWidget(test, t, g)
                     counterValue += 1
 
         # hardcoded don't forget to fix
         # Reading of the .E01 files
-        filename = r"C:\Users\758051\Desktop\Jelle van den Toren\Hovig_20_10_14_AF_LA2.E01"
+        filename = r"F:\HROK103_05_02_16_AF_PVL1.E01"
         with open(filename, 'rb') as fid:
             fid.seek(4608, os.SEEK_SET)
             data_array = np.fromfile(fid, np.int16).reshape((-1, 256)).T
@@ -111,7 +125,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 break;
             else:
                 for i in range(len(value)):
-                    while i < 100:
+                    while i < 1000:
                         self.d["dataSensor{0}".format(sensorID)].append(value[i] / gradient)
                         i += 1
                     sensorID += 1
@@ -120,13 +134,23 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     #   update the GUI.
     def update(self):
         sensors = self.dictionary
-        dataOfSensors = self.d
         keyPlace = list()
         color = (["red", "orange", "yellow", "pink", "blue", "violet", "blue", "black", "grey"])
+        i = 0
         # get the amount of times the code has to loop, error with this part, has to be rewritten so it doesn't loop to the end but takes another value
         for v in range(len(self.d.get("dataSensor0"))):
             QApplication.processEvents()
-            while True:
+            print(v, 'eerste ')
+            if v <= self.currentIterations:
+                v == self.currentIterations
+                print(v)
+                continue
+            if self.stop:
+                self.currentIterations = v
+                print(self.currentIterations)
+                self.stop = False
+                return
+            while v <= 100:
                 for x in range(len(self.d)):
                     if x == 0 or x == 7 or x == 184 or x == 191:
                         pass
@@ -146,18 +170,27 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
                                 sensors["widget{0}".format(x)].repaint()
                 self.updatePlot(v)
+                self.turnBackColors(v)
                 break;
+
+    def turnBackColors(self, v):
+        for value in self.orderedWaveCalculations.values():
+            if v - 20 >= max(value[0]):
+                for x in value:
+                    self.dictionary["widget{0}".format(x[1])].setStyleSheet("background-color: white")
+                    self.dictionary["widget{0}".format(x[1])].repaint()
 
     # Adds the graph at the bottom of the GUI
     def addmpl(self):
         self.test = mpl()
-        self.gridLayout.addWidget(self.test)
-        self.gridLayout.setSpacing(0)
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_3.addWidget(self.test)
+        self.gridLayout_3.setSpacing(0)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         if not self.myList:
             for c in self.d.get("dataSensor1"):
                 self.myList.append(c)
         self.test.axes.plot(self.myList, color="black")
+        # self.test.mpl_connect('scroll_event', self.zoom_factory)
         self.test.draw()
 
     # Updates the plot every millisecond so you see the red line move, so you can see at what millisecond you are.
@@ -166,6 +199,116 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.test.axes.draw_artist(lines)
         self.test.draw()
         self.test.axes.lines[-1].remove()
+
+
+    def changePlotSensorUp(self):
+        if self.SensorNumber == 191:
+            self.SensorNumber = 0
+        else:
+            self.SensorNumber += 1
+        print(self.SensorNumber)
+        self.myList.clear()
+        for c in self.d.get("dataSensor{0}".format(self.SensorNumber)):
+            self.myList.append(c)
+        self.createRedLines()
+        self.test.axes.lines[-1].remove()
+        if not self.List:
+            print("test")
+        else:
+            for values in self.List:
+                lines = self.test.axes.axvline(x=[values[0]], color="red")
+                print(values)
+                self.test.axes.draw_artist(lines)
+        self.test.axes.plot(self.myList, color="black")
+        self.test.draw()
+        for i, line in enumerate(self.test.axes.lines):
+            line.remove()
+
+    def changePlotSensorDown(self):
+        if self.SensorNumber == 0:
+            self.SensorNumber = 191
+        else:
+            self.SensorNumber -= 1
+        self.createRedLines()
+        print(self.SensorNumber)
+        self.myList.clear()
+        for c in self.d.get("dataSensor{0}".format(self.SensorNumber)):
+            self.myList.append(c)
+        self.test.axes.lines[0].remove()
+        self.test.axes.plot(self.myList, color="black")
+        self.test.draw()
+
+
+    def wheelEvent(self, QWheelEvent):
+        ax = self.test.axes
+        cur_xlim = ax.get_xlim()
+        cur_xrange = (cur_xlim[1] - cur_xlim[0]) * .5
+        xdata = QWheelEvent.globalX()
+        test = QWheelEvent.angleDelta() / 120
+        if test.y() == 1:
+            scale_factor = 1 / 2.
+        elif test.y() == -1:
+            scale_factor = 2.
+        else:
+            scale_factor = 1
+        ax.set_xlim([xdata - cur_xrange * scale_factor,
+                     xdata + cur_xrange * scale_factor])
+        self.test.draw()
+
+
+        # if QWheelEvent.angleDelta()/120:
+        #     print("it works?")
+
+
+    # def zoom_factory(ax, base_scale=2.):
+    #     def zoom_fun(event):
+    #         cur_xlim = ax.axes.get_xlim()
+    #         cur_ylim = ax.axes.get_ylim()
+    #         cur_xrange = (cur_xlim[1] - cur_xlim[0]) * .5
+    #         cur_yrange = (cur_ylim[1] - cur_ylim[0]) * .5
+    #         xdata = event.xdata
+    #         ydata = event.ydata
+    #         if event.button == 'up':
+    #             scale_factor = 1 / base_scale
+    #         elif event.button == 'down':
+    #             scale_factor = base_scale
+    #         else:
+    #             scale_factor = 1
+    #             print(event.button)
+    #         ax.set_xlim([xdata - cur_xrange * scale_factor,
+    #                      xdata + cur_xrange * scale_factor])
+    #         ax.set_ylim([ydata - cur_yrange * scale_factor,
+    #                      ydata + cur_yrange * scale_factor])
+    #         ax.figure.canvas.draw()
+    #     print("test")
+    #     fig = ax.test.axes.get_figure()
+    #     fig.canvas.mpl_connect()
+    #     return zoom_fun
+
+    def SensorClickEvent(self):
+        for value in range(len(self.dictionary)):
+            self.dictionary["widget{0}".format(value)].mouseReleaseEvent = lambda event, value=value: self.updateGraph(
+                event, value)
+
+    def updateGraph(self, event, value):
+        print(value)
+        self.SensorNumber = value
+        self.myList.clear()
+        for c in self.d.get("dataSensor{0}".format(value)):
+            self.myList.append(c)
+
+        self.createRedLines()
+        for i, line in enumerate(self.test.axes.lines):
+            line.remove()
+        for values in self.List:
+            lines = self.test.axes.axvline(x=[values[0]], color="red")
+            print(values)
+            self.test.axes.draw_artist(lines)
+        self.test.axes.plot(self.myList, color="black")
+        self.test.draw()
+
+        for i, line in enumerate(self.test.axes.lines):
+            line.remove()
 
     # checks the peaks so that the LAT can be calculated
     def peakDetection(self):
@@ -202,7 +345,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         for c in range(len(self.LATdictionary)):
             finalRow = len(self.LATdictionary) - 8
             if c%8 == 0 or c%8 == 7 or c <= 7 or c >= finalRow:
-                print("")
+                pass
             else:
                 #checks for surrounding sensors
                 surroundingSensors = [(c - 9), (c - 8), (c - 7), (c - 1), (c + 1), (c + 7), (c + 8), (c + 9)]
@@ -224,6 +367,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                     self.waveDictionary["{0}".format(lengthWaveDictionary)].append([valueCheck, test])
         self.cleanUpWave()
 
+    def createRedLines(self):
+        self.List.clear()
+        for value in self.orderedWaveCalculations.values():
+            for v in value:
+                if(self.SensorNumber == v[1]):
+                    self.List.append(v)
+
+
     # this checks whether the wave itself passes certain criteria, if not it gets deleted.
     def cleanUpWave(self):
         dictionary = self.waveDictionary.items()
@@ -232,15 +383,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 pass
             else:
                 for values in value[1]:
-                    print(values)
                     self.cleanedUpWaveDictionary[value[0]].append(values)
         self.orderedWaveCalculations = OrderedDict(sorted(self.cleanedUpWaveDictionary.items(), key=lambda x: x[1]))
         for value in self.cleanedUpWaveDictionary.items():
-            print(value)
-
-# work in progress
-    def redrawGraph(self):
-        print()
+            pass;
 
 # the class that creates the graph
 class mpl(FigureCanvas):
@@ -253,6 +399,8 @@ class mpl(FigureCanvas):
         FigureCanvas.setSizePolicy(self, QSizePolicy.Expanding, QSizePolicy.Expanding)
         FigureCanvas(self.fig)
         FigureCanvas.draw(self)
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
