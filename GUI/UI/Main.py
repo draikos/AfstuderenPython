@@ -256,35 +256,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.test.draw()
 
 
-        # if QWheelEvent.angleDelta()/120:
-        #     print("it works?")
-
-
-    # def zoom_factory(ax, base_scale=2.):
-    #     def zoom_fun(event):
-    #         cur_xlim = ax.axes.get_xlim()
-    #         cur_ylim = ax.axes.get_ylim()
-    #         cur_xrange = (cur_xlim[1] - cur_xlim[0]) * .5
-    #         cur_yrange = (cur_ylim[1] - cur_ylim[0]) * .5
-    #         xdata = event.xdata
-    #         ydata = event.ydata
-    #         if event.button == 'up':
-    #             scale_factor = 1 / base_scale
-    #         elif event.button == 'down':
-    #             scale_factor = base_scale
-    #         else:
-    #             scale_factor = 1
-    #             print(event.button)
-    #         ax.set_xlim([xdata - cur_xrange * scale_factor,
-    #                      xdata + cur_xrange * scale_factor])
-    #         ax.set_ylim([ydata - cur_yrange * scale_factor,
-    #                      ydata + cur_yrange * scale_factor])
-    #         ax.figure.canvas.draw()
-    #     print("test")
-    #     fig = ax.test.axes.get_figure()
-    #     fig.canvas.mpl_connect()
-    #     return zoom_fun
-
     def SensorClickEvent(self):
         for value in range(len(self.dictionary)):
             self.dictionary["widget{0}".format(value)].mouseReleaseEvent = lambda event, value=value: self.updateGraph(
