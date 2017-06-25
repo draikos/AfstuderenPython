@@ -5,17 +5,17 @@ from collections import defaultdict
 
 import matplotlib
 import numpy as np
+from PyQt5.QtGui import QMouseEvent
 
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from PyQt5.QtWidgets import QSizePolicy
+from PyQt5.QtWidgets import QSizePolicy, qApp
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSignal, QEvent
 from PyQt5.QtWidgets import QMainWindow
 from PyQt5.QtWidgets import QWidget
-from PyQt5.QtGui import QWheelEvent
 
 from GUI.UI.Ui_MainWindow import Ui_MainWindow
 from GUI.Data.detect_peaks import detect_peaks
@@ -32,12 +32,29 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.myList = list()
         self.LATdictionary = defaultdict(list)
         self.num_plots = 0
-        self.SensorNumber = 0
+        self.SensorNumber = 1
         self.cleanedUpWaveDictionary = defaultdict(list)
         self.stop = False
         self.x = 0
         self.currentIterations = 0
         self.List = list()
+        qApp.installEventFilter(self)
+        self.setMouseTracking(True)
+        self.switch = False
+        self.qrsFilterValues = list()
+
+        self.press = None
+        self.cur_xlim = None
+        self.cur_ylim = None
+        self.x0 = None
+        self.y0 = None
+        self.x1 = None
+        self.y1 = None
+        self.xpress = None
+        self.ypress = None
+
+
+
 
         self.setupUi(self)
         self.setupMappingVisualisation()
@@ -62,7 +79,14 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         if e.key() == Qt.Key_3:
             self.changePlotSensorDown()
         if e.key() == Qt.Key_4:
-            pass
+            self.qrsDetection()
+        if e.key() == Qt.Key_5:
+            print(self.switch)
+            if self.switch == False:
+                self.switch = True
+            else:
+                self.switch = False
+
 
 
 #   setup of the color mapping part
@@ -111,7 +135,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         # hardcoded don't forget to fix
         # Reading of the .E01 files
-        filename = r"F:\HROK103_05_02_16_AF_PVL1.E01"
+        filename = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
         with open(filename, 'rb') as fid:
             fid.seek(4608, os.SEEK_SET)
             data_array = np.fromfile(fid, np.int16).reshape((-1, 256)).T
@@ -131,7 +155,21 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     sensorID += 1
                     break;
 
-    #   update the GUI.
+    ####################################################################################################################
+    def eventFilter(self, obj, event):
+        if event.type() == QEvent.MouseButtonPress and obj == self.test:
+            if self.switch == False:
+                self.panning(event)
+            else:
+                self.qrsGetValues(event)
+        if event.type() == QEvent.MouseButtonRelease and obj == self.test:
+            if self.switch == False:
+                self.release(event)
+        if event.type() == QEvent.MouseMove and obj == self.test:
+            self.onMotion(event)
+        return super(MyMainWindow, self).eventFilter(obj, event)
+
+    # update the GUI.
     def update(self):
         sensors = self.dictionary
         keyPlace = list()
@@ -172,6 +210,29 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.updatePlot(v)
                 self.turnBackColors(v)
                 break;
+
+    def qrsGetValues(self, event):
+        if len(self.qrsFilterValues) == 0:
+            self.qrsFilterValues.append(event.globalX())
+        elif len(self.qrsFilterValues) == 1:
+            self.qrsFilterValues.append(event.globalX())
+            self.filterQRS()
+            self.qrsFilterValues.clear()
+
+
+    def filterQRS(self):
+        firstvalue = self.qrsFilterValues[0] - 455
+        secondvalue = self.qrsFilterValues[1] - 455
+        i = 0
+        for value in self.d.get("dataSensor{0}".format(self.SensorNumber)):
+            if i >= firstvalue and i <= secondvalue:
+                print(i)
+            i += 1
+        print(firstvalue, secondvalue)
+
+
+
+
 
     def turnBackColors(self, v):
         for value in self.orderedWaveCalculations.values():
@@ -242,24 +303,52 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def wheelEvent(self, QWheelEvent):
         ax = self.test.axes
         cur_xlim = ax.get_xlim()
-        cur_xrange = (cur_xlim[1] - cur_xlim[0]) * .5
+        cur_xrange = (cur_xlim[1] - cur_xlim[0]) * .9
         xdata = QWheelEvent.globalX()
         test = QWheelEvent.angleDelta() / 120
         if test.y() == 1:
-            scale_factor = 1 / 2.
+            scale_factor = 1 / 3.
         elif test.y() == -1:
-            scale_factor = 2.
+            scale_factor = 1.
         else:
             scale_factor = 1
         ax.set_xlim([xdata - cur_xrange * scale_factor,
                      xdata + cur_xrange * scale_factor])
         self.test.draw()
 
+    ####################################################################################################################
+    def panning(self, event):
+        ax = self.test.axes
+        self.cur_xlim = ax.get_xlim()
+        self.press = self.x0, event.globalX()
+        self.x0, self.xpress = self.press
+
+    def release(self, event):
+        ax = self.test.axes
+        self.press = None
+        self.test.draw()
+        self.updateGraph(event, value=self.SensorNumber)
+
+    def onMotion(self, event):
+        ax = self.test.axes
+        if self.press is None: return
+        dx = event.globalX() - self.xpress
+        self.cur_xlim = list(self.cur_xlim)
+        self.cur_xlim[0] -= dx / 20
+        self.cur_xlim[1] -= dx / 20
+        self.cur_xlim = tuple(self.cur_xlim)
+        ax.set_xlim(self.cur_xlim)
+        self.updateGraph(event, value=self.SensorNumber)
+        self.test.draw()
 
     def SensorClickEvent(self):
         for value in range(len(self.dictionary)):
             self.dictionary["widget{0}".format(value)].mouseReleaseEvent = lambda event, value=value: self.updateGraph(
                 event, value)
+
+    def qrsDetection(self):
+        test = detect_peaks(self.d.get("dataSensor{0}".format(0)), mpd=30, mph=0.1)
+
 
     def updateGraph(self, event, value):
         print(value)
@@ -373,7 +462,16 @@ class mpl(FigureCanvas):
 
 
 
+sys._excepthook = sys.excepthook
+def exception_hook(exctype, value, traceback):
+    sys._excepthook(exctype, value, traceback)
+    sys.exit(1)
+sys.excepthook = exception_hook
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = MyMainWindow()
-    sys.exit(app.exec_())
+    try:
+        sys.exit(app.exec_())
+    except:
+        print("Exiting")
