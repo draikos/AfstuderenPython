@@ -11,7 +11,7 @@ matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from PyQt5.QtWidgets import QSizePolicy, qApp
+from PyQt5.QtWidgets import QSizePolicy, qApp, QFileDialog
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import Qt, pyqtSignal, QEvent
 from PyQt5.QtWidgets import QMainWindow
@@ -42,6 +42,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.setMouseTracking(True)
         self.switch = False
         self.qrsFilterValues = list()
+        self.qrsFilteredList = list()
+        self.qrsBeforeFilterList = list()
+        self.coordinateList = list()
+        self.fileName = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
 
         self.press = None
         self.cur_xlim = None
@@ -86,6 +90,20 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.switch = True
             else:
                 self.switch = False
+        if e.key() == Qt.Key_6:
+            self.qrsFiltering()
+            self.averageCalculations()
+            self.peakDetection()
+            self.calculateWave()
+        if e.key() == Qt.Key_O:
+            options = QFileDialog.Options()
+            self.fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", r'C:\Users\draikos\Desktop\Marshall Croes\data\AF',
+                                                      "All Files (*);;Python Files (*.py)", options=options)
+            self.setupMappingVisualisation()
+            self.peakDetection()
+            self.calculateWave()
+            self.SensorClickEvent()
+
 
 
 
@@ -135,8 +153,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
         # hardcoded don't forget to fix
         # Reading of the .E01 files
-        filename = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
-        with open(filename, 'rb') as fid:
+        with open(self.fileName, 'rb') as fid:
             fid.seek(4608, os.SEEK_SET)
             data_array = np.fromfile(fid, np.int16).reshape((-1, 256)).T
             gradient = max(np.gradient(data_array[191]))
@@ -212,27 +229,39 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 break;
 
     def qrsGetValues(self, event):
-        if len(self.qrsFilterValues) == 0:
-            self.qrsFilterValues.append(event.globalX())
-        elif len(self.qrsFilterValues) == 1:
-            self.qrsFilterValues.append(event.globalX())
+        if len(self.coordinateList) == 0:
+            self.coordinateList.append(event.globalX())
+        elif len(self.coordinateList) == 1:
+            self.coordinateList.append(event.globalX())
             self.filterQRS()
-            self.qrsFilterValues.clear()
+            self.coordinateList.clear()
 
 
     def filterQRS(self):
-        firstvalue = self.qrsFilterValues[0] - 455
-        secondvalue = self.qrsFilterValues[1] - 455
-        i = 0
+        firstvalue = self.coordinateList[0] - 455
+        secondvalue = self.coordinateList[1] - 455
+        self.qrsBeforeFilterList.append([firstvalue, secondvalue])
+
+    def qrsFiltering(self):
+        for value in self.qrsBeforeFilterList:
+            firstvalue = value[0]
+            secondvalue = value[1]
+            for amount in range(len(self.d)):
+                i = 0
+                for value in self.d.get("dataSensor{0}".format(amount)):
+                    if i >= firstvalue and i <= secondvalue:
+                        self.d.get("dataSensor{0}".format(amount))[i] = 0
+                        print(self.d.get("dataSensor{0}".format(amount))[i])
+                    i += 1
+
+    def averageCalculations(self):
+        test = 0
         for value in self.d.get("dataSensor{0}".format(self.SensorNumber)):
-            if i >= firstvalue and i <= secondvalue:
-                print(i)
-            i += 1
-        print(firstvalue, secondvalue)
-
-
-
-
+            if value <= 0:
+                pass
+            else:
+                test = test + value
+        print("dit is een test", test/len(self.d.get("dataSensor{0}".format(self.SensorNumber))))
 
     def turnBackColors(self, v):
         for value in self.orderedWaveCalculations.values():
