@@ -45,7 +45,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.qrsFilteredList = list()
         self.qrsBeforeFilterList = list()
         self.coordinateList = list()
-        self.fileName = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
+        self.fileName = r"\\storage.erasmusmc.nl\m\MyDocs\758051\My Documents\Desktop\AF\Hovig_20_10_14_AF_LA2.E01"
 
         self.press = None
         self.cur_xlim = None
@@ -92,9 +92,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.switch = False
         if e.key() == Qt.Key_6:
             self.qrsFiltering()
-            self.averageCalculations()
             self.peakDetection()
             self.calculateWave()
+
         if e.key() == Qt.Key_O:
             options = QFileDialog.Options()
             self.fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", r'C:\Users\draikos\Desktop\Marshall Croes\data\AF',
@@ -251,17 +251,46 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 for value in self.d.get("dataSensor{0}".format(amount)):
                     if i >= firstvalue and i <= secondvalue:
                         self.d.get("dataSensor{0}".format(amount))[i] = 0
-                        print(self.d.get("dataSensor{0}".format(amount))[i])
                     i += 1
 
-    def averageCalculations(self):
+    def averageCalculations(self, averageHeight):
         test = 0
+        currentAverageHeight = 0
+        averageHeightList = list()
+        averageHeight = 0
+        previousValues = list()
+        counterUp = 0
+        counterDown = 0
+        prevvalue = 0
+        i = 0
         for value in self.d.get("dataSensor{0}".format(self.SensorNumber)):
-            if value <= 0:
-                pass
+            value = value - prevvalue
+            i += 1
+            if value > 0:
+                counterDown = 0
+                counterUp =+ 1
+                previousValues.append(value)
+
             else:
-                test = test + value
-        print("dit is een test", test/len(self.d.get("dataSensor{0}".format(self.SensorNumber))))
+                if not previousValues:
+                    pass
+                else:
+                    counterDown += 1
+                    print(counterDown)
+                    if counterDown >= 3:
+                        for value in previousValues:
+                            test = test + value
+                            currentAverageHeight = test / len(previousValues)
+                            averageHeightList.append(currentAverageHeight)
+                        previousValues.clear()
+                        counterDown = 0
+            value = prevvalue
+        for averageHeightValue in averageHeightList:
+            averageHeight = averageHeight + averageHeightValue
+        averageHeight = averageHeight / len(averageHeightList)
+        print(averageHeight)
+        return averageHeight
+
 
     def turnBackColors(self, v):
         for value in self.orderedWaveCalculations.values():
@@ -280,7 +309,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             for c in self.d.get("dataSensor1"):
                 self.myList.append(c)
         self.test.axes.plot(self.myList, color="black")
-        # self.test.mpl_connect('scroll_event', self.zoom_factory)
         self.test.draw()
 
     # Updates the plot every millisecond so you see the red line move, so you can see at what millisecond you are.
@@ -303,11 +331,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.createRedLines()
         self.test.axes.lines[-1].remove()
         if not self.List:
-            print("test")
+            pass
         else:
             for values in self.List:
                 lines = self.test.axes.axvline(x=[values[0]], color="red")
-                print(values)
                 self.test.axes.draw_artist(lines)
         self.test.axes.plot(self.myList, color="black")
         self.test.draw()
@@ -367,6 +394,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.cur_xlim[1] -= dx / 20
         self.cur_xlim = tuple(self.cur_xlim)
         ax.set_xlim(self.cur_xlim)
+
         self.updateGraph(event, value=self.SensorNumber)
         self.test.draw()
 
@@ -375,12 +403,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.dictionary["widget{0}".format(value)].mouseReleaseEvent = lambda event, value=value: self.updateGraph(
                 event, value)
 
-    def qrsDetection(self):
-        test = detect_peaks(self.d.get("dataSensor{0}".format(0)), mpd=30, mph=0.1)
-
 
     def updateGraph(self, event, value):
-        print(value)
         self.SensorNumber = value
         self.myList.clear()
         for c in self.d.get("dataSensor{0}".format(value)):
@@ -391,20 +415,20 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             line.remove()
         for values in self.List:
             lines = self.test.axes.axvline(x=[values[0]], color="red")
-            print(values)
             self.test.axes.draw_artist(lines)
         self.test.axes.plot(self.myList, color="black")
         self.test.draw()
-
         for i, line in enumerate(self.test.axes.lines):
             line.remove()
 
     # checks the peaks so that the LAT can be calculated
     def peakDetection(self):
+        averageHeight = 0
         testList = list()
+        calculationsAverage = self.averageCalculations(averageHeight)
         for v in range(len(self.d)):
-            test = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=30, mph=0.8)
-            if len(detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=30, mph=0.8)) == 0:
+            test = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=100, mph=calculationsAverage)
+            if len(detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=100, mph=calculationsAverage)) == 0:
                 testList.append([0])
             else:
                 testList.append(test)
@@ -460,7 +484,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.List.clear()
         for value in self.orderedWaveCalculations.values():
             for v in value:
-                if(self.SensorNumber == v[1]):
+                if self.SensorNumber == v[1]:
+                    print(v[1])
                     self.List.append(v)
 
 
