@@ -5,6 +5,7 @@ from collections import defaultdict
 
 import matplotlib
 import numpy as np
+import copy
 from PyQt5.QtGui import QMouseEvent
 
 matplotlib.use('Qt5Agg')
@@ -31,6 +32,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.dictionary = {}
         self.myList = list()
         self.LATdictionary = defaultdict(list)
+        self.orderedQRSList = defaultdict(list)
         self.num_plots = 0
         self.SensorNumber = 1
         self.cleanedUpWaveDictionary = defaultdict(list)
@@ -45,7 +47,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.qrsFilteredList = list()
         self.qrsBeforeFilterList = list()
         self.coordinateList = list()
-        self.fileName = r"\\storage.erasmusmc.nl\m\MyDocs\758051\My Documents\Desktop\AF\Hovig_20_10_14_AF_LA2.E01"
+        self.fileName = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA3.E01"
+        # self.fileName = r"E:\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
 
         self.press = None
         self.cur_xlim = None
@@ -92,8 +95,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.switch = False
         if e.key() == Qt.Key_6:
             self.qrsFiltering()
-            self.peakDetection()
             self.calculateWave()
+            self.peakDetection()
+
+        if e.key() == Qt.Key_7:
+            self.surroundingSensorCheckQRSFiltering()
 
         if e.key() == Qt.Key_O:
             options = QFileDialog.Options()
@@ -101,7 +107,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                                       "All Files (*);;Python Files (*.py)", options=options)
             self.setupMappingVisualisation()
             self.peakDetection()
-            self.calculateWave()
             self.SensorClickEvent()
 
 
@@ -198,11 +203,9 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             print(v, 'eerste ')
             if v <= self.currentIterations:
                 v == self.currentIterations
-                print(v)
                 continue
             if self.stop:
                 self.currentIterations = v
-                print(self.currentIterations)
                 self.stop = False
                 return
             while v <= 100:
@@ -210,7 +213,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                     if x == 0 or x == 7 or x == 184 or x == 191:
                         pass
                     else:
-                        if [v, x] in [x for v in self.orderedWaveCalculations.values() for x in v]:
+                        if [v, x] in [x for x in self.orderedWaveCalculations.values() for x in x]:
                             for key, values in self.waveDictionary.items():
                                 if [v, x] in values:
                                     if key in keyPlace:
@@ -253,6 +256,86 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                         self.d.get("dataSensor{0}".format(amount))[i] = 0
                     i += 1
 
+
+
+
+
+
+
+################################################################################################################
+
+
+    def surroundingSensorCheckQRSFiltering(self):
+        c = self.SensorNumber
+        surroundingSensorList = list()
+        currentSensor = list()
+        missedQRSlist = list()
+        orderedMissingQRSList = list()
+        orderedMissingQRSListofLists = list()
+        surroundingSensors = [(c - 9), (c - 8), (c - 7), (c - 1), c, (c + 1), (c + 7), (c + 8), (c + 9)]
+        print("test")
+        for values in surroundingSensors:
+            for value in self.orderedWaveCalculations.values():
+                for v in value:
+                    if values == v[1]:
+                        if values == self.SensorNumber:
+                            currentSensor.append(v)
+                        else:
+                            surroundingSensorList.append(v)
+
+
+        print("surrounding", surroundingSensorList)
+        print("current", currentSensor)
+        for value in currentSensor:
+            for v in surroundingSensorList:
+                if v[0]+5 >= value[0] and v[0]-5 <= value[0]:
+                    pass
+                else:
+                    if v not in missedQRSlist:
+                        missedQRSlist.append(v)
+                    else:
+                        pass
+
+
+        for value in missedQRSlist:
+            for v in missedQRSlist:
+                if v[0] + 5 >= value[0] and v[0] - 5 <= value[0] and v!= value:
+                    if v not in orderedMissingQRSList:
+                        orderedMissingQRSList.append(v)
+            orderedMissingQRSListofLists.append(copy.copy(orderedMissingQRSList))
+            orderedMissingQRSList.clear()
+
+        for value in orderedMissingQRSListofLists:
+            waveValues = 0
+            if len(value) > 2:
+                for v in value:
+                    waveValues += v[0]
+                waveValue = int(waveValues / len(value))
+                print(waveValue)
+                for key, value in self.orderedWaveCalculations.items():
+                    for c in value:
+                        if self.SensorNumber == c[1]:
+                            print(waveValue)
+                            print(key,value)
+                            self.orderedWaveCalculations[key].append([waveValue, self.SensorNumber])
+                            break
+
+
+        # for value in self.orderedWaveCalculations.values():
+        #     for v in value:
+        #         if self.SensorNumber == v[1]:
+        #             print(v)
+
+
+
+################################################################################################################
+
+
+
+
+
+
+
     def averageCalculations(self, averageHeight):
         test = 0
         currentAverageHeight = 0
@@ -270,7 +353,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 counterDown = 0
                 counterUp =+ 1
                 previousValues.append(value)
-
             else:
                 if not previousValues:
                     pass
@@ -317,7 +399,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.test.axes.draw_artist(lines)
         self.test.draw()
         self.test.axes.lines[-1].remove()
-
 
     def changePlotSensorUp(self):
         if self.SensorNumber == 191:
@@ -409,7 +490,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.myList.clear()
         for c in self.d.get("dataSensor{0}".format(value)):
             self.myList.append(c)
-
         self.createRedLines()
         for i, line in enumerate(self.test.axes.lines):
             line.remove()
@@ -425,10 +505,10 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def peakDetection(self):
         averageHeight = 0
         testList = list()
-        calculationsAverage = self.averageCalculations(averageHeight)
+        average = self.averageCalculations(averageHeight)
         for v in range(len(self.d)):
-            test = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=100, mph=calculationsAverage)
-            if len(detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=100, mph=calculationsAverage)) == 0:
+            test = detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=70, mph=average)
+            if len(detect_peaks(self.d.get("dataSensor{0}".format(v)), mpd=70, mph=average)) == 0:
                 testList.append([0])
             else:
                 testList.append(test)
@@ -485,7 +565,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         for value in self.orderedWaveCalculations.values():
             for v in value:
                 if self.SensorNumber == v[1]:
-                    print(v[1])
+                    print(v)
                     self.List.append(v)
 
 
@@ -499,8 +579,6 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 for values in value[1]:
                     self.cleanedUpWaveDictionary[value[0]].append(values)
         self.orderedWaveCalculations = OrderedDict(sorted(self.cleanedUpWaveDictionary.items(), key=lambda x: x[1]))
-        for value in self.cleanedUpWaveDictionary.items():
-            pass;
 
 # the class that creates the graph
 class mpl(FigureCanvas):
