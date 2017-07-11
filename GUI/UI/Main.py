@@ -7,6 +7,8 @@ import matplotlib
 import numpy as np
 import copy
 from PyQt5.QtGui import QMouseEvent
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtWidgets import QMenuBar
 
 matplotlib.use('Qt5Agg')
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -47,8 +49,11 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.qrsFilteredList = list()
         self.qrsBeforeFilterList = list()
         self.coordinateList = list()
-        self.fileName = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA3.E01"
-        # self.fileName = r"E:\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
+        # self.fileName = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA3.E01"
+        self.fileName = r"F:\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
+
+
+
 
         self.press = None
         self.cur_xlim = None
@@ -68,10 +73,12 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.peakDetection()
         self.calculateWave()
         self.addmpl()
+        self.createUI()
         self.show()
         self.SensorClickEvent()
 
-
+    def processtrigger(self, q):
+        print(q.text() + " is triggered")
 
     def keyPressEvent(self, e):
         if e.key() == Qt.Key_Escape:
@@ -102,17 +109,26 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.surroundingSensorCheckQRSFiltering()
 
         if e.key() == Qt.Key_O:
-            options = QFileDialog.Options()
-            self.fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()", r'C:\Users\draikos\Desktop\Marshall Croes\data\AF',
-                                                      "All Files (*);;Python Files (*.py)", options=options)
-            self.setupMappingVisualisation()
-            self.peakDetection()
-            self.SensorClickEvent()
+            self.changeFile()
+
+    def createUI(self):
+        self.setWindowTitle('Equipment Manager 0.3')
+        menu = self.menuBar.addMenu('File')
+        action = menu.addAction('Change File Path')
+        action.triggered.connect(self.changeFile)
 
 
 
+    def changeFile(self):
+        options = QFileDialog.Options()
+        self.fileName, _ = QFileDialog.getOpenFileName(self, "QFileDialog.getOpenFileName()",
+                                                       r'C:\Users\draikos\Desktop\Marshall Croes\data\AF',
+                                                       "All Files (*);;Python Files (*.py)", options=options)
+        self.setupMappingVisualisation()
+        self.peakDetection()
+        self.SensorClickEvent()
 
-#   setup of the color mapping part
+        #   setup of the color mapping part
     def setupMappingVisualisation(self):
         layout = self.gridLayout_2
         counterValue = 0
