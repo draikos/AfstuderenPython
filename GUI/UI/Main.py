@@ -49,8 +49,8 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.qrsFilteredList = list()
         self.qrsBeforeFilterList = list()
         self.coordinateList = list()
-        # self.fileName = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA3.E01"
-        self.fileName = r"F:\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
+        self.fileName = r"C:\Users\draikos\Desktop\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA3.E01"
+        # self.fileName = r"F:\Marshall Croes\data\AF\Hovig_20_10_14_AF_LA2.E01"
 
 
 
@@ -112,12 +112,19 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             self.changeFile()
 
     def createUI(self):
-        self.setWindowTitle('Equipment Manager 0.3')
+        self.setWindowTitle('AF viewer')
         menu = self.menuBar.addMenu('File')
         action = menu.addAction('Change File Path')
         action.triggered.connect(self.changeFile)
+        self.lineEdit.setText(str(self.SensorNumber))
+        self.pushButton.clicked.connect(self.buttonClicked)
+        self.pushButton_2.clicked.connect(self.buttonClicked2)
 
+    def buttonClicked(self):
+        self.update()
 
+    def buttonClicked2(self):
+        self.stop = True
 
     def changeFile(self):
         options = QFileDialog.Options()
@@ -126,7 +133,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                                                        "All Files (*);;Python Files (*.py)", options=options)
         self.setupMappingVisualisation()
         self.peakDetection()
-        self.SensorClickEvent()
+        self.resetPlot()
 
         #   setup of the color mapping part
     def setupMappingVisualisation(self):
@@ -224,7 +231,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                 self.currentIterations = v
                 self.stop = False
                 return
-            while v <= 100:
+            while v <= 1000:
                 for x in range(len(self.d)):
                     if x == 0 or x == 7 or x == 184 or x == 191:
                         pass
@@ -337,19 +344,13 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
                             break
 
 
-        # for value in self.orderedWaveCalculations.values():
-        #     for v in value:
-        #         if self.SensorNumber == v[1]:
-        #             print(v)
-
-
-
 ################################################################################################################
 
 
 
 
-
+    def removeKeys(self):
+        print()
 
 
     def averageCalculations(self, averageHeight):
@@ -392,7 +393,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
 
     def turnBackColors(self, v):
         for value in self.orderedWaveCalculations.values():
-            if v - 20 >= max(value[0]):
+            if v - 100 >= max(value[0]):
                 for x in value:
                     self.dictionary["widget{0}".format(x[1])].setStyleSheet("background-color: white")
                     self.dictionary["widget{0}".format(x[1])].repaint()
@@ -413,6 +414,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
     def updatePlot(self, v):
         lines = self.test.axes.axvline(x=[v], color="red")
         self.test.axes.draw_artist(lines)
+        self.createRedLines()
         self.test.draw()
         self.test.axes.lines[-1].remove()
 
@@ -437,6 +439,16 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
         self.test.draw()
         for i, line in enumerate(self.test.axes.lines):
             line.remove()
+
+
+    def resetPlot(self):
+        self.createRedLines()
+        self.myList.clear()
+        for c in self.d.get("dataSensor{0}".format(self.SensorNumber)):
+            self.myList.append(c)
+        self.test.axes.lines[0].remove()
+        self.test.axes.plot(self.myList, color="black")
+        self.test.draw()
 
     def changePlotSensorDown(self):
         if self.SensorNumber == 0:
@@ -513,6 +525,7 @@ class MyMainWindow(QMainWindow, Ui_MainWindow):
             lines = self.test.axes.axvline(x=[values[0]], color="red")
             self.test.axes.draw_artist(lines)
         self.test.axes.plot(self.myList, color="black")
+        self.lineEdit.setText(str(self.SensorNumber))
         self.test.draw()
         for i, line in enumerate(self.test.axes.lines):
             line.remove()

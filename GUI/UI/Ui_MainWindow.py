@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'mainwindow (1).ui'
+# Form implementation generated from reading ui file 'C:\Users\draikos\Desktop\mainwindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.8.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
@@ -18,48 +18,54 @@ class Ui_MainWindow(object):
         self.groupBox.setGeometry(QtCore.QRect(20, 20, 361, 201))
         self.groupBox.setTitle("")
         self.groupBox.setObjectName("groupBox")
-        self.gridLayoutWidget = QtWidgets.QWidget(self.groupBox)
-        self.gridLayoutWidget.setGeometry(QtCore.QRect(-1, -1, 361, 201))
-        self.gridLayoutWidget.setObjectName("gridLayoutWidget")
-        self.gridLayout = QtWidgets.QGridLayout(self.gridLayoutWidget)
-        self.gridLayout.setContentsMargins(11, 11, 11, 11)
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.groupBox)
+        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_4.setSpacing(0)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.gridLayout = QtWidgets.QGridLayout()
+        self.gridLayout.setContentsMargins(20, 20, 250, 130)
         self.gridLayout.setSpacing(6)
         self.gridLayout.setObjectName("gridLayout")
+        self.label = QtWidgets.QLabel(self.groupBox)
+        self.label.setObjectName("label")
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+        self.lineEdit = QtWidgets.QLineEdit(self.groupBox)
+        self.lineEdit.setReadOnly(True)
+        self.lineEdit.setObjectName("lineEdit")
+        self.gridLayout.addWidget(self.lineEdit, 1, 0, 1, 1)
+        self.gridLayout_4.addLayout(self.gridLayout, 0, 0, 1, 1)
         self.groupBox_2 = QtWidgets.QGroupBox(self.centralWidget)
-        self.groupBox_2.setGeometry(QtCore.QRect(400, 20, 761, 201))
+        self.groupBox_2.setGeometry(QtCore.QRect(400, 20, 751, 201))
         self.groupBox_2.setTitle("")
         self.groupBox_2.setObjectName("groupBox_2")
-        self.gridLayoutWidget_2 = QtWidgets.QWidget(self.groupBox_2)
-        self.gridLayoutWidget_2.setGeometry(QtCore.QRect(0, 0, 761, 201))
-        self.gridLayoutWidget_2.setObjectName("gridLayoutWidget_2")
-        self.gridLayout_2 = QtWidgets.QGridLayout(self.gridLayoutWidget_2)
+        self.gridLayout_5 = QtWidgets.QGridLayout(self.groupBox_2)
+        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_5.setSpacing(0)
+        self.gridLayout_5.setObjectName("gridLayout_5")
+        self.gridLayout_2 = QtWidgets.QGridLayout()
         self.gridLayout_2.setContentsMargins(11, 11, 11, 11)
         self.gridLayout_2.setSpacing(6)
         self.gridLayout_2.setObjectName("gridLayout_2")
+        self.gridLayout_5.addLayout(self.gridLayout_2, 0, 0, 1, 1)
         self.groupBox_3 = QtWidgets.QGroupBox(self.centralWidget)
-        self.groupBox_3.setGeometry(QtCore.QRect(20, 230, 1141, 241))
+        self.groupBox_3.setGeometry(QtCore.QRect(20, 230, 1131, 261))
         self.groupBox_3.setTitle("")
         self.groupBox_3.setObjectName("groupBox_3")
-        self.gridLayoutWidget_3 = QtWidgets.QWidget(self.groupBox_3)
-        self.gridLayoutWidget_3.setGeometry(QtCore.QRect(0, 0, 1141, 241))
-        self.gridLayoutWidget_3.setObjectName("gridLayoutWidget_3")
-        self.gridLayout_3 = QtWidgets.QGridLayout(self.gridLayoutWidget_3)
+        self.gridLayout_6 = QtWidgets.QGridLayout(self.groupBox_3)
+        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout_6.setSpacing(0)
+        self.gridLayout_6.setObjectName("gridLayout_6")
+        self.gridLayout_3 = QtWidgets.QGridLayout()
         self.gridLayout_3.setContentsMargins(11, 11, 11, 11)
         self.gridLayout_3.setSpacing(6)
         self.gridLayout_3.setObjectName("gridLayout_3")
+        self.gridLayout_6.addLayout(self.gridLayout_3, 0, 0, 1, 1)
         self.pushButton = QtWidgets.QPushButton(self.centralWidget)
         self.pushButton.setGeometry(QtCore.QRect(20, 500, 81, 23))
         self.pushButton.setObjectName("pushButton")
-        self.horizontalSlider = QtWidgets.QSlider(self.centralWidget)
-        self.horizontalSlider.setGeometry(QtCore.QRect(110, 500, 160, 22))
-        self.horizontalSlider.setOrientation(QtCore.Qt.Horizontal)
-        self.horizontalSlider.setObjectName("horizontalSlider")
         self.pushButton_2 = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(280, 500, 81, 23))
+        self.pushButton_2.setGeometry(QtCore.QRect(130, 500, 81, 23))
         self.pushButton_2.setObjectName("pushButton_2")
-        self.pushButton_3 = QtWidgets.QPushButton(self.centralWidget)
-        self.pushButton_3.setGeometry(QtCore.QRect(370, 500, 75, 23))
-        self.pushButton_3.setObjectName("pushButton_3")
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 1233, 21))
@@ -78,11 +84,9 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton.setText(_translate("MainWindow", "PushButton"))
-        self.pushButton_2.setText(_translate("MainWindow", "PushButton"))
-        self.pushButton_3.setText(_translate("MainWindow", "PushButton"))
-
-
+        self.label.setText(_translate("MainWindow", "Huidige Sensor"))
+        self.pushButton.setText(_translate("MainWindow", "Start"))
+        self.pushButton_2.setText(_translate("MainWindow", "Pauze"))
 
 
 if __name__ == "__main__":
@@ -93,3 +97,4 @@ if __name__ == "__main__":
     ui.setupUi(MainWindow)
     MainWindow.show()
     sys.exit(app.exec_())
+
